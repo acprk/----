@@ -46,7 +46,8 @@ const Music = () => {
           id: Date.now(), // Local temp ID, DB will generate real ID usually
           title: newMusic.title,
           link: newMusic.link,
-          cover: newMusic.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=500', // Default cover
+          // Use YouTube thumb, or a nice abstract gradient/pattern if empty. Not the ugly DJ photo.
+          cover: newMusic.cover || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=500&auto=format&fit=crop', 
           // created_at will be added by useCloudStorage
       };
 
