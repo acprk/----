@@ -125,9 +125,11 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
   };
 
   const deleteItem = async (id) => {
+    // Optimistic update: immediately remove from local state
+    setData(prev => (prev || []).filter(item => item.id !== id));
+
     if (!isSupabaseConfigured) {
       setLocalData(prev => prev.filter(item => item.id !== id));
-      setData(prev => prev.filter(item => item.id !== id));
       return;
     }
 
@@ -138,13 +140,16 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
 
     if (error) {
       console.error('Error deleting item:', error);
+      alert('删除失败，请刷新页面重试');
     }
   };
 
   const updateItem = async (updatedItem) => {
+    // Optimistic update: immediately update local state
+    setData(prev => (prev || []).map(item => item.id === updatedItem.id ? updatedItem : item));
+
     if (!isSupabaseConfigured) {
       setLocalData(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-      setData(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
       return;
     }
 
@@ -156,6 +161,7 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
 
     if (error) {
       console.error('Error updating item:', error);
+      alert('更新失败，请刷新页面重试');
     }
   };
 
