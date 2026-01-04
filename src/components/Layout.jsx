@@ -101,6 +101,8 @@ const Layout = () => {
         {/* Mobile Navigation Hint (Optional, can be removed if menu is obvious) */}
         {/* This helps users realize there is a menu if they miss the hamburger icon */}
       </main>
+
+      <GlobalMusicPlayer />
     </div>
   );
 };

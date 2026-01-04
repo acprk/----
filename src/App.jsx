@@ -45,7 +45,8 @@ const App = () => {
             <Route path="travel" element={<Travel />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </MusicProvider>
     </AuthProvider>
   );
 };

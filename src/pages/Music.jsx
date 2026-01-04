@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Music as MusicIcon, Play, Pause, Plus, X, Trash2, Disc, Search, ExternalLink, Cloud, CloudOff } from 'lucide-react';
+import { Music as MusicIcon, Play, Pause, Plus, X, Trash2, Search, ExternalLink, Cloud, CloudOff } from 'lucide-react';
 import { useCloudStorage } from '../hooks/useCloudStorage';
+import { useMusic } from '../context/MusicContext';
 
 const Music = () => {
   const initialMusic = [
@@ -11,16 +12,13 @@ const Music = () => {
       cover: "https://images.unsplash.com/photo-1595971294624-92b6457a4a8f?auto=format&fit=crop&q=80&w=500",
       addedAt: "2024-01-01"
     },
-    // ... (Keep existing initial items if needed, or remove them to rely on Cloud)
-    // For cloud migration, better to start clean or rely on what's in useCloudStorage logic
   ];
 
-  const { data: musicList, loading, addItem, deleteItem, isCloud } = useCloudStorage('music', 'musicList', initialMusic);
+  const { data: musicList, addItem, deleteItem, isCloud } = useCloudStorage('music', 'musicList', initialMusic);
+  const { currentSong, isPlaying, playSong, closePlayer } = useMusic();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [currentSong, setCurrentSong] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   
   const [newMusic, setNewMusic] = useState({
       title: '',
@@ -37,12 +35,7 @@ const Music = () => {
   }).sort((a, b) => new Date(b.addedAt || b.created_at) - new Date(a.addedAt || a.created_at));
 
   const handlePlay = (item) => {
-    if (currentSong?.id === item.id && isPlaying) {
-      setIsPlaying(false);
-    } else {
-      setCurrentSong(item);
-      setIsPlaying(true);
-    }
+    playSong(item);
   };
 
   const handleAddMusic = (e) => {
@@ -64,10 +57,9 @@ const Music = () => {
 
   const handleDeleteMusic = (id) => {
       if(window.confirm('确定要删除这首音乐吗？')) {
-          deleteItem('id', id);
+          deleteItem(id);
           if (currentSong?.id === id) {
-              setCurrentSong(null);
-              setIsPlaying(false);
+              closePlayer();
           }
       }
   };
@@ -115,7 +107,7 @@ const Music = () => {
       </header>
 
       {/* Music Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-24">
         {filteredMusic.map(item => (
           <div key={item.id} className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-rose-100 relative">
              <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -167,185 +159,6 @@ const Music = () => {
             </div>
         )}
       </div>
-
-      {/* Music Player Bar (Fixed Bottom) */}
-      {currentSong && (
-        <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-white border-t border-stone-200 p-4 shadow-lg z-40 flex flex-col md:flex-row items-center justify-between animate-slide-up gap-4">
-            {/* Player Logic */}
-            {(() => {
-                const isBilibili = currentSong.link && (currentSong.link.includes('bilibili.com') || currentSong.link.startsWith('BV'));
-                // Robust YouTube detection
-                const getYouTubeId = (url) => {
-                    if (!url) return null;
-                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-                    const match = url.match(regExp);
-                    return (match && match[2].length === 11) ? match[2] : null;
-                };
-                const youtubeId = getYouTubeId(currentSong.link);
-                
-                if (isBilibili) {
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-                            {/* Backdrop - Click to close */}
-                            <div 
-                                className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity" 
-                                onClick={() => {
-                                    setCurrentSong(null);
-                                    setIsPlaying(false);
-                                }}
-                            ></div>
-
-                            <Rnd
-                                default={{
-                                    x: typeof window !== 'undefined' ? (window.innerWidth - 800) / 2 : 100,
-                                    y: typeof window !== 'undefined' ? (window.innerHeight - 500) / 2 : 100,
-                                    width: 800,
-                                    height: 480,
-                                }}
-                                minWidth={320}
-                                minHeight={200}
-                                bounds="window"
-                                className="pointer-events-auto z-50 bg-black rounded-xl overflow-hidden shadow-2xl border border-rose-200 flex flex-col"
-                                dragHandleClassName="drag-handle"
-                            >
-                                {/* Drag Handle / Header */}
-                                <div className="drag-handle h-10 bg-rose-950/90 backdrop-blur flex items-center justify-between px-4 cursor-move border-b border-rose-900 shrink-0 group">
-                                    <div className="flex items-center gap-2 text-rose-100">
-                                        <MusicIcon size={16} />
-                                        <span className="text-xs font-bold uppercase tracking-wider">Bilibili Player</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="text-rose-300/60 text-[10px] uppercase font-mono hidden group-hover:block">
-                                            Drag to move • Resize edges
-                                        </div>
-                                        <button 
-                                            onClick={() => {
-                                                setCurrentSong(null);
-                                                setIsPlaying(false);
-                                            }}
-                                            className="text-rose-200 hover:text-white transition-colors bg-rose-800 hover:bg-red-600 rounded-full p-1"
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Video Content */}
-                                <div className="flex-1 relative bg-black w-full h-full">
-                                    <iframe 
-                                        src={`//player.bilibili.com/player.html?bvid=${currentSong.link.match(/BV[a-zA-Z0-9]+/)?.[0] || ''}&high_quality=1&danmaku=0`} 
-                                        className="absolute inset-0 w-full h-full"
-                                        scrolling="no" 
-                                        border="0" 
-                                        frameBorder="0" 
-                                        framespacing="0" 
-                                        allowFullScreen={true}
-                                    ></iframe>
-                                </div>
-                            </Rnd>
-                        </div>
-                    );
-                } else if (youtubeId) {
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-                            {/* Backdrop - Click to close */}
-                            <div 
-                                className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity" 
-                                onClick={() => {
-                                    setCurrentSong(null);
-                                    setIsPlaying(false);
-                                }}
-                            ></div>
-
-                            <Rnd
-                                default={{
-                                    x: typeof window !== 'undefined' ? (window.innerWidth - 800) / 2 : 100,
-                                    y: typeof window !== 'undefined' ? (window.innerHeight - 500) / 2 : 100,
-                                    width: 800,
-                                    height: 480,
-                                }}
-                                minWidth={320}
-                                minHeight={200}
-                                bounds="window"
-                                className="pointer-events-auto z-50 bg-black rounded-xl overflow-hidden shadow-2xl border border-rose-200 flex flex-col"
-                                dragHandleClassName="drag-handle"
-                            >
-                                {/* Drag Handle / Header */}
-                                <div className="drag-handle h-10 bg-rose-950/90 backdrop-blur flex items-center justify-between px-4 cursor-move border-b border-rose-900 shrink-0 group">
-                                    <div className="flex items-center gap-2 text-rose-100">
-                                        <Youtube size={16} />
-                                        <span className="text-xs font-bold uppercase tracking-wider">YouTube Player</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="text-rose-300/60 text-[10px] uppercase font-mono hidden group-hover:block">
-                                            Drag to move • Resize edges
-                                        </div>
-                                        <button 
-                                            onClick={() => {
-                                                setCurrentSong(null);
-                                                setIsPlaying(false);
-                                            }}
-                                            className="text-rose-200 hover:text-white transition-colors bg-rose-800 hover:bg-red-600 rounded-full p-1"
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Video Content */}
-                                <div className="flex-1 relative bg-black w-full h-full">
-                                    <iframe 
-                                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
-                                        className="absolute inset-0 w-full h-full"
-                                        frameBorder="0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    ></iframe>
-                                </div>
-                            </Rnd>
-                        </div>
-                    );
-                } else {
-                    // Standard Audio Player
-                    return (
-                        <>
-                            <div className="flex items-center gap-4">
-                                <img src={currentSong.cover} alt="Album Art" className="w-12 h-12 rounded object-cover shadow-sm" />
-                                <div>
-                                    <h4 className="font-bold text-stone-800 text-sm">{currentSong.title}</h4>
-                                    <p className="text-xs text-stone-500">正在播放</p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-6">
-                                <button className="text-stone-400 hover:text-stone-600">
-                                    <Disc className="w-5 h-5" />
-                                </button>
-                                <button 
-                                    onClick={() => setIsPlaying(!isPlaying)}
-                                    className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center hover:bg-rose-600 transition-colors shadow-sm"
-                                >
-                                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-1" />}
-                                </button>
-                                <div className="w-48 h-1 bg-stone-100 rounded-full overflow-hidden">
-                                    <div className="h-full bg-rose-400 w-1/3 animate-pulse"></div>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                                <button onClick={() => {
-                                    setCurrentSong(null);
-                                    setIsPlaying(false);
-                                }} className="text-stone-400 hover:text-stone-600">
-                                    <X size={20} />
-                                </button>
-                            </div>
-                        </>
-                    );
-                }
-            })()}
-        </div>
-      )}
 
       {/* Add Music Modal */}
       {showAddModal && (
