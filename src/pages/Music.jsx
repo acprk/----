@@ -185,50 +185,124 @@ const Music = () => {
                 
                 if (isBilibili) {
                     return (
-                        <div className="w-full flex justify-center">
-                            <div className="relative w-full max-w-xl aspect-video bg-black rounded overflow-hidden shadow-lg">
-                                <iframe 
-                                    src={`//player.bilibili.com/player.html?bvid=${currentSong.link.match(/BV[a-zA-Z0-9]+/)?.[0] || ''}&high_quality=1&danmaku=0`} 
-                                    className="absolute inset-0 w-full h-full"
-                                    scrolling="no" 
-                                    border="0" 
-                                    frameBorder="0" 
-                                    framespacing="0" 
-                                    allowFullScreen={true}
-                                ></iframe>
-                                <button 
-                                    onClick={() => {
-                                        setCurrentSong(null);
-                                        setIsPlaying(false);
-                                    }}
-                                    className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-red-600 transition-colors z-50"
-                                >
-                                    <X size={16} />
-                                </button>
-                            </div>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                            {/* Backdrop - Click to close */}
+                            <div 
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity" 
+                                onClick={() => {
+                                    setCurrentSong(null);
+                                    setIsPlaying(false);
+                                }}
+                            ></div>
+
+                            <Rnd
+                                default={{
+                                    x: typeof window !== 'undefined' ? (window.innerWidth - 800) / 2 : 100,
+                                    y: typeof window !== 'undefined' ? (window.innerHeight - 500) / 2 : 100,
+                                    width: 800,
+                                    height: 480,
+                                }}
+                                minWidth={320}
+                                minHeight={200}
+                                bounds="window"
+                                className="pointer-events-auto z-50 bg-black rounded-xl overflow-hidden shadow-2xl border border-rose-200 flex flex-col"
+                                dragHandleClassName="drag-handle"
+                            >
+                                {/* Drag Handle / Header */}
+                                <div className="drag-handle h-10 bg-rose-950/90 backdrop-blur flex items-center justify-between px-4 cursor-move border-b border-rose-900 shrink-0 group">
+                                    <div className="flex items-center gap-2 text-rose-100">
+                                        <MusicIcon size={16} />
+                                        <span className="text-xs font-bold uppercase tracking-wider">Bilibili Player</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-rose-300/60 text-[10px] uppercase font-mono hidden group-hover:block">
+                                            Drag to move • Resize edges
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                setCurrentSong(null);
+                                                setIsPlaying(false);
+                                            }}
+                                            className="text-rose-200 hover:text-white transition-colors bg-rose-800 hover:bg-red-600 rounded-full p-1"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Video Content */}
+                                <div className="flex-1 relative bg-black w-full h-full">
+                                    <iframe 
+                                        src={`//player.bilibili.com/player.html?bvid=${currentSong.link.match(/BV[a-zA-Z0-9]+/)?.[0] || ''}&high_quality=1&danmaku=0`} 
+                                        className="absolute inset-0 w-full h-full"
+                                        scrolling="no" 
+                                        border="0" 
+                                        frameBorder="0" 
+                                        framespacing="0" 
+                                        allowFullScreen={true}
+                                    ></iframe>
+                                </div>
+                            </Rnd>
                         </div>
                     );
                 } else if (youtubeId) {
                     return (
-                        <div className="w-full flex justify-center">
-                            <div className="relative w-full max-w-xl aspect-video bg-black rounded overflow-hidden shadow-lg">
-                                <iframe 
-                                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
-                                    className="absolute inset-0 w-full h-full"
-                                    frameBorder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                ></iframe>
-                                <button 
-                                    onClick={() => {
-                                        setCurrentSong(null);
-                                        setIsPlaying(false);
-                                    }}
-                                    className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-red-600 transition-colors z-50"
-                                >
-                                    <X size={16} />
-                                </button>
-                            </div>
+                        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                            {/* Backdrop - Click to close */}
+                            <div 
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity" 
+                                onClick={() => {
+                                    setCurrentSong(null);
+                                    setIsPlaying(false);
+                                }}
+                            ></div>
+
+                            <Rnd
+                                default={{
+                                    x: typeof window !== 'undefined' ? (window.innerWidth - 800) / 2 : 100,
+                                    y: typeof window !== 'undefined' ? (window.innerHeight - 500) / 2 : 100,
+                                    width: 800,
+                                    height: 480,
+                                }}
+                                minWidth={320}
+                                minHeight={200}
+                                bounds="window"
+                                className="pointer-events-auto z-50 bg-black rounded-xl overflow-hidden shadow-2xl border border-rose-200 flex flex-col"
+                                dragHandleClassName="drag-handle"
+                            >
+                                {/* Drag Handle / Header */}
+                                <div className="drag-handle h-10 bg-rose-950/90 backdrop-blur flex items-center justify-between px-4 cursor-move border-b border-rose-900 shrink-0 group">
+                                    <div className="flex items-center gap-2 text-rose-100">
+                                        <Youtube size={16} />
+                                        <span className="text-xs font-bold uppercase tracking-wider">YouTube Player</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-rose-300/60 text-[10px] uppercase font-mono hidden group-hover:block">
+                                            Drag to move • Resize edges
+                                        </div>
+                                        <button 
+                                            onClick={() => {
+                                                setCurrentSong(null);
+                                                setIsPlaying(false);
+                                            }}
+                                            className="text-rose-200 hover:text-white transition-colors bg-rose-800 hover:bg-red-600 rounded-full p-1"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Video Content */}
+                                <div className="flex-1 relative bg-black w-full h-full">
+                                    <iframe 
+                                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                                        className="absolute inset-0 w-full h-full"
+                                        frameBorder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
+                            </Rnd>
                         </div>
                     );
                 } else {

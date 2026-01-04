@@ -124,22 +124,31 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
   };
 
   const deleteItem = async (id) => {
-    // Optimistic update: immediately remove from local state
-    setData(prev => (prev || []).filter(item => item.id !== id));
+    // 1. Optimistic update (Memory State)
+    const newData = (data || []).filter(item => item.id !== id);
+    setData(newData);
 
-    if (!isSupabaseConfigured) {
-      setLocalData(prev => prev.filter(item => item.id !== id));
-      return;
-    }
+    // 2. Always update Local Storage immediately (Force Local Delete)
+    // This ensures that even if Cloud delete fails (e.g. bad ID), the item is gone from user view
+    // and won't come back from cache on reload.
+    setLocalData(newData);
 
-    const { error } = await supabase
-      .from(tableName)
-      .delete()
-      .eq('id', id);
+    if (!isSupabaseConfigured) return;
 
-    if (error) {
-      console.error('Error deleting item:', error);
-      alert('删除失败，请刷新页面重试');
+    // 3. Try Cloud Delete
+    try {
+        const { error } = await supabase
+          .from(tableName)
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          console.error('Cloud delete failed (likely due to invalid ID mismatch or permission), but item was removed locally:', error);
+          // We intentionally suppress the alert here. 
+          // If the item had a bad ID (legacy data), it's now gone from UI/Local, which is what the user wants.
+        }
+    } catch (err) {
+        console.error("Unexpected error during delete:", err);
     }
   };
 
