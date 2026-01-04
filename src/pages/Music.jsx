@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Music as MusicIcon, Play, Pause, Plus, X, Trash2, Disc, Search, ExternalLink } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { Music as MusicIcon, Play, Pause, Plus, X, Trash2, Disc, Search, ExternalLink, Cloud, CloudOff } from 'lucide-react';
+import { useCloudStorage } from '../hooks/useCloudStorage';
 
 const Music = () => {
   const initialMusic = [
@@ -11,30 +11,12 @@ const Music = () => {
       cover: "https://images.unsplash.com/photo-1595971294624-92b6457a4a8f?auto=format&fit=crop&q=80&w=500",
       addedAt: "2024-01-01"
     },
-    {
-      id: 2,
-      title: "Shape of You - Ed Sheeran",
-      link: "",
-      cover: "https://images.unsplash.com/photo-1520333789090-1afc82db536a?auto=format&fit=crop&q=80&w=500",
-      addedAt: "2024-01-02"
-    },
-    {
-      id: 3,
-      title: "Viva La Vida - Coldplay",
-      link: "",
-      cover: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&q=80&w=500",
-      addedAt: "2024-01-03"
-    },
-    {
-      id: 4,
-      title: "Moonlight Sonata - Beethoven",
-      link: "",
-      cover: "https://images.unsplash.com/photo-1507838153414-b4b713384ebd?auto=format&fit=crop&q=80&w=500",
-      addedAt: "2024-01-04"
-    }
+    // ... (Keep existing initial items if needed, or remove them to rely on Cloud)
+    // For cloud migration, better to start clean or rely on what's in useCloudStorage logic
   ];
 
-  const [musicList, setMusicList] = useLocalStorage('musicList', initialMusic);
+  const { data: musicList, loading, addItem, deleteItem, isCloud } = useCloudStorage('music', 'musicList', initialMusic);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentSong, setCurrentSong] = useState(null);
@@ -46,10 +28,13 @@ const Music = () => {
       cover: ''
   });
 
-  const filteredMusic = musicList.filter(item => {
+  // Safe check for musicList to be an array
+  const safeMusicList = Array.isArray(musicList) ? musicList : [];
+
+  const filteredMusic = safeMusicList.filter(item => {
       const query = searchQuery.toLowerCase();
       return item.title.toLowerCase().includes(query);
-  }).sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+  }).sort((a, b) => new Date(b.addedAt || b.created_at) - new Date(a.addedAt || a.created_at));
 
   const handlePlay = (item) => {
     if (currentSong?.id === item.id && isPlaying) {
@@ -65,21 +50,21 @@ const Music = () => {
       if (!newMusic.title.trim()) return;
 
       const newItem = {
-          id: Date.now(),
+          id: Date.now(), // Local temp ID, DB will generate real ID usually
           title: newMusic.title,
           link: newMusic.link,
           cover: newMusic.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=500', // Default cover
           addedAt: new Date().toISOString()
       };
 
-      setMusicList([newItem, ...musicList]);
+      addItem(newItem);
       setShowAddModal(false);
       setNewMusic({ title: '', link: '', cover: '' });
   };
 
   const handleDeleteMusic = (id) => {
       if(window.confirm('确定要删除这首音乐吗？')) {
-          setMusicList(musicList.filter(item => item.id !== id));
+          deleteItem('id', id);
           if (currentSong?.id === id) {
               setCurrentSong(null);
               setIsPlaying(false);
@@ -95,7 +80,18 @@ const Music = () => {
             <MusicIcon className="w-8 h-8 text-rose-600" />
             音乐收藏 (Music Collection)
           </h1>
-          <p className="text-rose-900/60 mt-2 text-sm font-medium">我的个人音乐库，随时随地享受旋律。</p>
+          <p className="text-rose-900/60 mt-2 text-sm font-medium flex items-center gap-2">
+            我的个人音乐库，随时随地享受旋律。
+            {isCloud ? (
+                <span className="inline-flex items-center gap-1 text-green-600 text-xs px-2 py-0.5 bg-green-100 rounded-full">
+                    <Cloud size={10} /> Cloud Sync Active
+                </span>
+            ) : (
+                <span className="inline-flex items-center gap-1 text-orange-600 text-xs px-2 py-0.5 bg-orange-100 rounded-full" title="Connect to Supabase for Cloud Sync">
+                    <CloudOff size={10} /> Local Mode
+                </span>
+            )}
+          </p>
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
              <div className="relative">
