@@ -173,7 +173,7 @@ const Tech = () => {
             </p>
             
             <div className="flex flex-wrap gap-2 mt-auto">
-              {article.tags.map(tag => (
+              {(article.tags || []).map(tag => (
                 <span key={tag} className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">
                   #{tag}
                 </span>

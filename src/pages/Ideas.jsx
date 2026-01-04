@@ -212,7 +212,7 @@ const Ideas = () => {
                             </p>
 
                             <div className="flex flex-wrap gap-1.5">
-                                {idea.tags.map(tag => (
+                                {(idea.tags || []).map(tag => (
                                 <span key={tag} className="text-[10px] bg-slate-50 text-slate-500 px-2 py-1 rounded border border-slate-100">
                                     #{tag}
                                 </span>
