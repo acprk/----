@@ -108,48 +108,69 @@ const Music = () => {
       </header>
 
       {/* Music Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-24">
-        {filteredMusic.map(item => (
-          <div key={item.id} className="group bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-rose-100 relative">
-             <div className="absolute top-2 right-2 z-10 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <button 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteMusic(item.id);
-                    }}
-                    className="p-1.5 bg-white/90 backdrop-blur rounded-full text-stone-500 hover:text-red-600 shadow-sm"
-                    title="删除"
-                >
-                    <Trash2 className="w-3 h-3" />
-                </button>
-             </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-24">
+        {filteredMusic.map(item => {
+          const getYoutubeId = (url) => {
+             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+             const match = url ? url.match(regExp) : null;
+             return (match && match[2].length === 11) ? match[2] : null;
+          };
+          const youtubeId = getYoutubeId(item.link);
+          return (
+            <div key={item.id} className="group relative bg-white p-4 rounded-xl border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-200 transition-all flex gap-4 animate-fade-in-up" onClick={() => handlePlay(item)}>
+               {/* Delete Button */}
+               <button 
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteMusic(item.id);
+                  }}
+                  className="absolute top-2 right-2 p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg md:opacity-0 md:group-hover:opacity-100 transition-all z-10"
+                  title="删除"
+              >
+                  <Trash2 className="w-4 h-4" />
+              </button>
 
-            <div className="aspect-square overflow-hidden relative group cursor-pointer" onClick={() => handlePlay(item)}>
-              <img 
-                src={item.cover} 
-                alt={item.title}
-                className={`w-full h-full object-cover transition-transform duration-700 ${currentSong?.id === item.id && isPlaying ? 'scale-110' : 'group-hover:scale-110'}`}
-              />
-              <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity duration-300 ${currentSong?.id === item.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                 <button className="w-12 h-12 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-                    {currentSong?.id === item.id && isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-1" />}
-                 </button>
+              {/* Thumbnail/Icon */}
+              <div className="shrink-0">
+                   {youtubeId ? (
+                      <div 
+                          className="w-32 h-20 rounded-lg overflow-hidden bg-black relative shadow-sm group-hover:shadow-md transition-all cursor-pointer"
+                      >
+                          <img 
+                              src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`} 
+                              alt={item.title}
+                              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                          />
+                          <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${currentSong?.id === item.id && isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <div className="w-8 h-8 bg-white/20 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+                                  {currentSong?.id === item.id && isPlaying ? <Pause className="w-4 h-4 text-white fill-current" /> : <Play className="w-4 h-4 text-white fill-current ml-0.5" />}
+                              </div>
+                          </div>
+                      </div>
+                   ) : (
+                      <div className={`w-20 h-20 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-100 transition-colors`}>
+                          {currentSong?.id === item.id && isPlaying ? <Pause className="w-8 h-8" /> : <MusicIcon className="w-8 h-8" />}
+                      </div>
+                   )}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-stone-800 truncate pr-6 group-hover:text-rose-600 transition-colors text-base">{item.title}</h3>
+                  </div>
+                  <div className="flex items-center justify-between mt-auto">
+                       <span className="text-xs text-stone-400 font-mono">{new Date(item.addedAt || item.created_at).toLocaleDateString()}</span>
+                       {item.link && (
+                           <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-600" onClick={(e) => e.stopPropagation()}>
+                               <ExternalLink size={14} />
+                           </a>
+                       )}
+                  </div>
               </div>
             </div>
-            
-            <div className="p-4">
-                <h3 className="font-bold text-stone-800 text-sm leading-tight truncate mb-1" title={item.title}>{item.title}</h3>
-                <div className="flex justify-between items-center mt-2">
-                     <span className="text-xs text-stone-400 font-mono">{new Date(item.addedAt || item.created_at).toLocaleDateString()}</span>
-                     {item.link && (
-                         <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:text-rose-600" onClick={(e) => e.stopPropagation()}>
-                             <ExternalLink size={14} />
-                         </a>
-                     )}
-                </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         
         {filteredMusic.length === 0 && (
             <div className="col-span-full text-center py-12">
