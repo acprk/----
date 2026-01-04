@@ -23,7 +23,7 @@ const Music = () => {
   const [newMusic, setNewMusic] = useState({
       title: '',
       link: '',
-      cover: ''
+      // cover is now optional/internal, not user-facing
   });
 
   // Safe check for musicList to be an array
