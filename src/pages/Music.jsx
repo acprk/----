@@ -194,16 +194,6 @@ const Music = () => {
                         />
                         <p className="text-[10px] text-stone-400 mt-1">支持 Bilibili/YouTube 视频链接或直接音频链接</p>
                     </div>
-                    <div>
-                         <label className="block text-xs font-bold text-rose-900/60 uppercase mb-1">封面图片 URL (可选)</label>
-                         <input 
-                            type="text" 
-                            className="w-full border border-rose-200 rounded p-2 text-sm focus:outline-none focus:border-rose-500"
-                            placeholder="https://..."
-                            value={newMusic.cover}
-                            onChange={(e) => setNewMusic({...newMusic, cover: e.target.value})}
-                        />
-                    </div>
                     <button 
                         type="submit"
                         className="w-full py-2.5 bg-rose-600 text-white rounded-md font-bold hover:bg-rose-700 transition-colors shadow-md shadow-rose-200"
