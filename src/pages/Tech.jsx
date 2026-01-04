@@ -48,7 +48,7 @@ const Tech = () => {
     }
   ];
 
-  const { data: articles, addItem, deleteItem, updateItem } = useCloudStorage('tech_articles', 'articles', initialArticles);
+  const { data: articles, addItem, deleteItem, updateItem, isCloud } = useCloudStorage('tech_articles', 'articles', initialArticles);
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [viewingArticle, setViewingArticle] = useState(null);
