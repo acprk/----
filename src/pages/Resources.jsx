@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3, Cloud, CloudOff } from 'lucide-react';
+import { Rnd } from 'react-rnd';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
 

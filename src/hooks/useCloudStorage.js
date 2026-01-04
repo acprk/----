@@ -125,12 +125,11 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
 
   const deleteItem = async (id) => {
     // 1. Optimistic update (Memory State)
-    const newData = (data || []).filter(item => item.id !== id);
+    // Use loose comparison (!=) to handle string/number mismatches (e.g. "123" vs 123)
+    const newData = (data || []).filter(item => item.id != id);
     setData(newData);
 
     // 2. Always update Local Storage immediately (Force Local Delete)
-    // This ensures that even if Cloud delete fails (e.g. bad ID), the item is gone from user view
-    // and won't come back from cache on reload.
     setLocalData(newData);
 
     if (!isSupabaseConfigured) return;
