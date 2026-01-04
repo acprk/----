@@ -1,15 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music } from 'lucide-react';
+import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music, Menu, X } from 'lucide-react';
 
 const Layout = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleNavClick = () => {
+    setIsMobileMenuOpen(false);
   };
 
   const navItems = [
@@ -26,14 +31,14 @@ const Layout = () => {
       {/* Mobile Backdrop */}
       {isMobileMenuOpen && (
         <div 
-            className="fixed inset-0 bg-black/50 z-30 md:hidden animate-fade-in"
+            className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
             onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        w-64 bg-white border-r border-stone-200 fixed h-full z-40 flex flex-col transition-transform duration-300 ease-in-out
+        w-64 bg-white border-r border-stone-200 fixed h-full z-50 flex flex-col transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
       `}>
@@ -92,6 +97,9 @@ const Layout = () => {
         <div className="max-w-4xl mx-auto">
            <Outlet />
         </div>
+        
+        {/* Mobile Navigation Hint (Optional, can be removed if menu is obvious) */}
+        {/* This helps users realize there is a menu if they miss the hamburger icon */}
       </main>
     </div>
   );
