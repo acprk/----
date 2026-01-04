@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music, Menu, X } from 'lucide-react';
+import GlobalMusicPlayer from './GlobalMusicPlayer';
 
 const Layout = () => {
   const { logout } = useAuth();
