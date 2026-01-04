@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3 } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
 
 const Resources = () => {
@@ -100,7 +100,7 @@ const Resources = () => {
     }
   ];
 
-  const [resources, setResources] = useLocalStorage('resources', initialResources);
+  const { data: resources, addItem, deleteItem, updateItem } = useCloudStorage('resources', 'resources', initialResources);
   const [playingVideo, setPlayingVideo] = useState(null); // Video ID to play
   
   // Form State
@@ -146,7 +146,7 @@ const Resources = () => {
       type,
     };
 
-    setResources([resourceToAdd, ...resources]);
+    addItem(resourceToAdd);
     setShowModal(false);
     setNewResource({ title: '', link: '', description: '', category: 'Papers', type: 'Link' });
   };
@@ -154,7 +154,7 @@ const Resources = () => {
   const handleDeleteResource = (id, e) => {
       e.stopPropagation(); // Prevent triggering hover/click on parent
       if (window.confirm('确定要删除这个资源吗？')) {
-          setResources(resources.filter(res => res.id !== id));
+          deleteItem(id);
       }
   };
 
@@ -176,7 +176,7 @@ const Resources = () => {
           type
       };
 
-      setResources(resources.map(r => r.id === editingResource.id ? updatedResource : r));
+      updateItem(updatedResource);
       setEditingResource(null);
   };
 
@@ -216,7 +216,7 @@ const Resources = () => {
       <div className="flex-1 flex gap-4 overflow-hidden min-h-0">
         {categories.map((cat) => {
           const isActive = activeCategory === cat.name;
-          const catResources = resources.filter(r => r.category === cat.name);
+          const catResources = (resources || []).filter(r => r.category === cat.name);
 
           return (
             <div 

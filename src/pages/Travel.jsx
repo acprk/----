@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MapPin, Calendar, Camera, Navigation, Map as MapIcon, Plus, X, Trash2, Activity, Timer, Trophy, Edit2, Search } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
 import ReactMarkdown from 'react-markdown';
@@ -74,8 +74,8 @@ const Travel = () => {
     { id: 2, date: '2024-03-03', type: 'Marathon', name: 'Tokyo Marathon', distance: '42.195km', time: '3:30:15', pace: '4:59/km', notes: 'PB achieved in chilly rain.' },
   ];
 
-  const [trips, setTrips] = useLocalStorage('trips', initialTrips);
-  const [sports, setSports] = useLocalStorage('sports', initialSports);
+  const { data: trips, addItem: addTrip, deleteItem: deleteTrip, updateItem: updateTrip } = useCloudStorage('trips', 'trips', initialTrips);
+  const { data: sports, addItem: addSport, deleteItem: deleteSport } = useCloudStorage('sports_records', 'sports', initialSports);
   
   const [showModal, setShowModal] = useState(false);
   const [viewingTrip, setViewingTrip] = useState(null);
@@ -188,27 +188,27 @@ const Travel = () => {
 
   const handleAddTrip = (e) => {
       e.preventDefault();
-      setTrips([{
+      addTrip({
           id: Date.now(),
           ...newTrip,
           imageColor: getRandomColor(),
           // Ensure coordinates are numbers
           coordinates: [parseFloat(newTrip.coordinates[0]), parseFloat(newTrip.coordinates[1])]
-      }, ...trips]);
+      });
       setShowModal(false);
       setNewTrip({ title: '', location: '', date: '', description: '', content: '', height: 'h-64', imageUrl: '', coordinates: [0, 0] });
   };
 
   const handleUpdateTrip = (e) => {
     e.preventDefault();
-    setTrips(trips.map(t => t.id === editingTrip.id ? editingTrip : t));
+    updateTrip(editingTrip);
     setEditingTrip(null);
     setViewingTrip(null); // Close view modal if open
   };
 
   const handleDeleteTrip = (id) => {
     if (window.confirm('确定要删除这段旅程记录吗？')) {
-      setTrips(trips.filter(trip => trip.id !== id));
+      deleteTrip(id);
       if (viewingTrip && viewingTrip.id === id) {
           setViewingTrip(null);
       }
@@ -217,17 +217,17 @@ const Travel = () => {
 
   const handleAddSport = (e) => {
       e.preventDefault();
-      setSports([{
+      addSport({
           id: Date.now(),
           ...newSport
-      }, ...sports]);
+      });
       setShowSportModal(false);
       setNewSport({ date: '', type: 'Run', name: '', distance: '', time: '', pace: '', notes: '' });
   };
 
   const handleDeleteSport = (id) => {
       if(window.confirm('确定要删除这条运动记录吗？')) {
-          setSports(sports.filter(s => s.id !== id));
+          deleteSport(id);
       }
   };
 
@@ -240,7 +240,7 @@ const Travel = () => {
         </div>
         <div className="flex items-center gap-4 text-orange-900/60">
            <div className="text-right hidden md:block">
-             <div className="text-2xl font-bold text-orange-900">{trips.length}</div>
+             <div className="text-2xl font-bold text-orange-900">{(trips || []).length}</div>
              <div className="text-xs uppercase tracking-widest">足迹</div>
            </div>
            <div className="w-px h-8 bg-orange-200 hidden md:block"></div>
@@ -279,7 +279,7 @@ const Travel = () => {
                 ))
               }
             </Geographies>
-            {trips.map(({ id, title, location, coordinates }) => (
+            {(trips || []).map(({ id, title, location, coordinates }) => (
               coordinates && (
                   <Marker key={id} coordinates={coordinates}>
                     <circle r={4} fill="#ea580c" stroke="#fff" strokeWidth={2} />
@@ -303,7 +303,7 @@ const Travel = () => {
             游记列表
         </h2>
         <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-            {trips.map((trip) => (
+            {(trips || []).map((trip) => (
             <div 
                 key={trip.id} 
                 className="break-inside-avoid bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer border border-stone-100 relative"
@@ -396,7 +396,7 @@ const Travel = () => {
                       </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
-                      {sports.map((sport) => (
+                      {(sports || []).map((sport) => (
                           <tr key={sport.id} className="hover:bg-stone-50/50 transition-colors">
                               <td className="px-6 py-4 font-mono text-stone-600">{sport.date}</td>
                               <td className="px-6 py-4">
@@ -423,7 +423,7 @@ const Travel = () => {
                               </td>
                           </tr>
                       ))}
-                      {sports.length === 0 && (
+                      {(sports || []).length === 0 && (
                           <tr>
                               <td colSpan="8" className="px-6 py-8 text-center text-stone-400 italic">
                                   暂无运动记录，快去跑起来吧！

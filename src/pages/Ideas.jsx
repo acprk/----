@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
 
 const Ideas = () => {
@@ -56,7 +56,7 @@ const Ideas = () => {
     }
   ];
 
-  const [ideas, setIdeas] = useLocalStorage('ideas', initialIdeas);
+  const { data: ideas, addItem, deleteItem, updateItem } = useCloudStorage('ideas', 'ideas', initialIdeas);
   const [showModal, setShowModal] = useState(false);
   const [viewingIdea, setViewingIdea] = useState(null);
   const [newIdea, setNewIdea] = useState({
@@ -92,25 +92,25 @@ const Ideas = () => {
   const handleAddIdea = (e) => {
       e.preventDefault();
       const tagsArray = newIdea.tags.split(',').map(t => t.trim()).filter(t => t);
-      setIdeas([{
+      addItem({
           id: Date.now(),
           ...newIdea,
           tags: tagsArray,
           date: new Date().toLocaleDateString()
-      }, ...ideas]);
+      });
       setShowModal(false);
       setNewIdea({ title: '', description: '', content: '', references: '', stage: 'Ideation', tags: '', priority: 'Medium' });
   };
 
   const handleDeleteIdea = (id) => {
       if (window.confirm('确定要删除这个想法吗？')) {
-          setIdeas(ideas.filter(idea => idea.id !== id));
+          deleteItem(id);
       }
   };
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredIdeas = ideas.filter(idea => {
+  const filteredIdeas = (ideas || []).filter(idea => {
     const query = searchQuery.toLowerCase();
     return (
         (idea.title && idea.title.toLowerCase().includes(query)) ||
@@ -407,7 +407,7 @@ const Ideas = () => {
                     </button>
                     <button 
                         onClick={() => {
-                            setIdeas(ideas.map(i => i.id === viewingIdea.id ? viewingIdea : i));
+                            updateItem(viewingIdea);
                             setViewingIdea(null);
                         }}
                         className="px-6 py-2 bg-indigo-600 text-white rounded font-medium hover:bg-indigo-700 transition-colors shadow-sm"

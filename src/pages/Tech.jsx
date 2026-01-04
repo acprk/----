@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
 
 const Tech = () => {
@@ -48,12 +48,12 @@ const Tech = () => {
     }
   ];
 
-  const [articles, setArticles] = useLocalStorage('articles', initialArticles);
+  const { data: articles, addItem, deleteItem, updateItem } = useCloudStorage('tech_articles', 'articles', initialArticles);
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [viewingArticle, setViewingArticle] = useState(null);
   
-  const filteredArticles = articles.filter(article => {
+  const filteredArticles = (articles || []).filter(article => {
       const query = searchQuery.toLowerCase();
       return (
           (article.title && article.title.toLowerCase().includes(query)) ||
@@ -79,19 +79,19 @@ const Tech = () => {
   const handleAddArticle = (e) => {
       e.preventDefault();
       const tagsArray = newArticle.tags.split(',').map(t => t.trim()).filter(t => t);
-      setArticles([{
+      addItem({
           id: Date.now(),
           ...newArticle,
           tags: tagsArray,
           date: new Date().toLocaleDateString()
-      }, ...articles]);
+      });
       setShowModal(false);
       setNewArticle({ title: '', summary: '', content: '', tags: '', iconName: 'Terminal' });
   };
 
   const handleDeleteArticle = (id) => {
       if (window.confirm('确定要删除这篇文章吗？')) {
-          setArticles(articles.filter(article => article.id !== id));
+          deleteItem(id);
       }
   };
 
@@ -292,7 +292,7 @@ const Tech = () => {
                     </div>
                     <button 
                         onClick={() => {
-                            setArticles(articles.map(a => a.id === viewingArticle.id ? viewingArticle : a));
+                            updateItem(viewingArticle);
                             setViewingArticle(null);
                         }}
                         className="px-6 py-2 bg-slate-800 text-white rounded font-bold hover:bg-slate-700 transition-colors shadow-sm"

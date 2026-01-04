@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Book, Star, Clock, Quote, Bookmark, Plus, X, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Edit3 } from 'lucide-react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useCloudStorage } from '../hooks/useCloudStorage';
 import AIAssistant from '../components/AIAssistant';
 import MarkdownEditor from '../components/MarkdownEditor';
 
@@ -116,7 +116,7 @@ const Reading = () => {
     }
   ];
 
-  const [books, setBooks] = useLocalStorage('books', initialBooks);
+  const { data: books, addItem, deleteItem, updateItem } = useCloudStorage('books', 'books', initialBooks);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
@@ -135,25 +135,25 @@ const Reading = () => {
   });
 
   const currentYear = new Date().getFullYear();
-  const booksThisYear = books.filter(b => {
+  const booksThisYear = (books || []).filter(b => {
       if (!b.date) return false;
       const d = new Date(b.date);
       return d.getFullYear() === currentYear;
   }).length;
   
-  const readingBooks = books.filter(b => b.status === 'Reading');
+  const readingBooks = (books || []).filter(b => b.status === 'Reading');
 
   const handleAddBook = (e) => {
     e.preventDefault();
     const dateStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    setBooks([{ id: Date.now(), ...newBook, date: dateStr }, ...books]);
+    addItem({ id: Date.now(), ...newBook, date: dateStr });
     setShowAddModal(false);
     setNewBook({ title: '', author: '', status: 'Reading', rating: 0, progress: 0, quote: '', review: '', notes: [] });
   };
 
   const handleDeleteBook = (id) => {
     if (window.confirm('确定要删除这本书的记录吗？')) {
-      setBooks(books.filter(book => book.id !== id));
+      deleteItem(id);
     }
   };
 
@@ -165,7 +165,7 @@ const Reading = () => {
 
   const handleSaveReview = () => {
     if (selectedBook) {
-        setBooks(books.map(b => b.id === selectedBook.id ? { ...b, review: tempReview } : b));
+        updateItem({ ...selectedBook, review: tempReview });
         setShowReviewModal(false);
         setSelectedBook(null);
     }
@@ -187,7 +187,7 @@ const Reading = () => {
                 </div>
                 <div className="w-px h-4 bg-amber-300"></div>
                 <div className="flex items-center gap-2">
-                    <span className="font-bold text-amber-900 text-lg">{books.length}</span> 总笔记
+                    <span className="font-bold text-amber-900 text-lg">{(books || []).length}</span> 总笔记
                 </div>
             </div>
             <button 

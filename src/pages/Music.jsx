@@ -54,7 +54,7 @@ const Music = () => {
           title: newMusic.title,
           link: newMusic.link,
           cover: newMusic.cover || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=500', // Default cover
-          addedAt: new Date().toISOString()
+          // created_at will be added by useCloudStorage
       };
 
       addItem(newItem);
@@ -147,7 +147,7 @@ const Music = () => {
             <div className="p-4">
                 <h3 className="font-bold text-stone-800 text-sm leading-tight truncate mb-1" title={item.title}>{item.title}</h3>
                 <div className="flex justify-between items-center mt-2">
-                     <span className="text-xs text-stone-400 font-mono">{new Date(item.addedAt).toLocaleDateString()}</span>
+                     <span className="text-xs text-stone-400 font-mono">{new Date(item.addedAt || item.created_at).toLocaleDateString()}</span>
                      {item.link && (
                          <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:text-rose-600" onClick={(e) => e.stopPropagation()}>
                              <ExternalLink size={14} />

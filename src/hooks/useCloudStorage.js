@@ -97,18 +97,24 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
   // So we will provide helper functions that components should use instead of setList.
   
   const addItem = async (item) => {
+    // Ensure created_at exists for both local and cloud
+    const itemToSave = { 
+        ...item, 
+        created_at: item.created_at || new Date().toISOString() 
+    };
+
     if (!isSupabaseConfigured) {
-      setLocalData(prev => [item, ...prev]);
-      setData(prev => [item, ...prev]);
+      setLocalData(prev => [itemToSave, ...prev]);
+      setData(prev => [itemToSave, ...prev]);
       return;
     }
 
-    // Remove 'id' if it's just a timestamp, let DB handle ID? 
-    // Or keep ID for consistency. Supabase usually uses UUID or Serial.
-    // Let's assume we pass the full item.
-    
-    // Ensure created_at exists
-    const itemToSave = { ...item, created_at: new Date().toISOString() };
+    // For cloud, we generally want the DB to generate IDs if they are serial integers.
+    // However, our frontend generates Date.now() IDs.
+    // If we pass a large integer to a bigint column, it works.
+    // But if we want to switch to DB-generated IDs, we should remove the ID here.
+    // For now, let's keep the ID if provided, to support the "optimistic" feel or consistency.
+    // Actually, if we pass ID, Supabase will use it.
     
     const { error } = await supabase.from(tableName).insert([itemToSave]);
     if (error) {
@@ -118,25 +124,40 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
     // Realtime subscription will update the list
   };
 
-  const deleteItem = async (idField, idValue) => {
-     if (!isSupabaseConfigured) {
-        setLocalData(prev => prev.filter(item => item[idField] !== idValue));
-        setData(prev => prev.filter(item => item[idField] !== idValue));
-        return;
-     }
+  const deleteItem = async (id) => {
+    if (!isSupabaseConfigured) {
+      setLocalData(prev => prev.filter(item => item.id !== id));
+      setData(prev => prev.filter(item => item.id !== id));
+      return;
+    }
 
-     const { error } = await supabase.from(tableName).delete().eq(idField, idValue);
-     if (error) {
-        console.error("Error deleting item:", error);
-        alert("Failed to delete from cloud: " + error.message);
-     }
+    const { error } = await supabase
+      .from(tableName)
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting item:', error);
+    }
   };
 
-  return { 
-    data, 
-    loading, 
-    addItem, 
-    deleteItem, 
-    isCloud: isSupabaseConfigured 
+  const updateItem = async (updatedItem) => {
+    if (!isSupabaseConfigured) {
+      setLocalData(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+      setData(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+      return;
+    }
+
+    // Remove client-side only fields if necessary, or ensure DB schema matches
+    const { error } = await supabase
+      .from(tableName)
+      .update(updatedItem)
+      .eq('id', updatedItem.id);
+
+    if (error) {
+      console.error('Error updating item:', error);
+    }
   };
+
+  return { data, loading, addItem, deleteItem, updateItem, isCloud: isSupabaseConfigured };
 };
