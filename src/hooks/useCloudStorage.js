@@ -39,8 +39,9 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
         }
 
         if (cloudData) {
-            // Transform data if needed? Assuming structure is compatible.
             setData(cloudData);
+            // Sync cloud data back to local storage to keep cache fresh
+            setLocalData(cloudData);
         }
       } catch (err) {
         console.error(err);
