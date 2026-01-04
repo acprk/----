@@ -111,13 +111,11 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
     }
 
     // For cloud, we generally want the DB to generate IDs if they are serial integers.
-    // However, our frontend generates Date.now() IDs.
-    // If we pass a large integer to a bigint column, it works.
-    // But if we want to switch to DB-generated IDs, we should remove the ID here.
-    // For now, let's keep the ID if provided, to support the "optimistic" feel or consistency.
-    // Actually, if we pass ID, Supabase will use it.
+    // We strip the ID from the item so Supabase generates a new valid ID (int/uuid).
+    // This prevents "integer out of range" or "invalid input syntax for type uuid" errors.
+    const { id, ...itemForCloud } = itemToSave;
     
-    const { error } = await supabase.from(tableName).insert([itemToSave]);
+    const { error } = await supabase.from(tableName).insert([itemForCloud]);
     if (error) {
         console.error("Error adding item:", error);
         alert("Failed to add to cloud: " + error.message);
