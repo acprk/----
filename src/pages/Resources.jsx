@@ -3,6 +3,117 @@ import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, P
 import { Rnd } from 'react-rnd';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// --- Sortable Item Component ---
+const SortableResourceItem = ({ resource, onDelete, onPlay, categoryColor, typeIcon, getYoutubeId }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: resource.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 999 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative', 
+    touchAction: 'none', // Required for PointerSensor to work smoothly on touch devices
+  };
+
+  const youtubeId = getYoutubeId(resource.link);
+
+  return (
+    <div 
+        ref={setNodeRef} 
+        style={style} 
+        {...attributes} 
+        {...listeners}
+        className="group relative bg-white p-4 rounded-xl border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-200 transition-all flex gap-4 animate-fade-in-up cursor-grab active:cursor-grabbing"
+    >
+        {/* Delete Button - Stop Propagation to prevent drag start on click */}
+        <button 
+        onClick={(e) => onDelete(resource.id, e)}
+        onPointerDown={(e) => e.stopPropagation()} 
+        className="absolute top-2 right-2 p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-20"
+        >
+            <Trash2 className="w-4 h-4" />
+        </button>
+
+        {/* Thumbnail/Icon */}
+        <div className="shrink-0">
+            {youtubeId ? (
+                <div 
+                    className="w-32 h-20 rounded-lg overflow-hidden bg-black relative shadow-sm group-hover:shadow-md transition-all cursor-pointer"
+                    onClick={(e) => {
+                        // Prevent drag when clicking to play
+                        // Actually, listeners are on the parent div. 
+                        // If we want to allow clicking, we usually don't need to stop propagation unless it conflicts.
+                        // But for dragging, clicking the thumbnail might be interpreted as drag start.
+                        // We'll let it be. If user drags, it drags. If click, it plays.
+                        onPlay(youtubeId);
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()} // Stop drag when interacting with thumbnail to play
+                >
+                    <img 
+                        src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`} 
+                        alt={resource.title}
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-8 h-8 bg-white/20 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
+                            <Youtube className="w-4 h-4 text-white fill-current" />
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className={`w-12 h-12 rounded-lg ${categoryColor} bg-opacity-10 flex items-center justify-center`}>
+                    {typeIcon}
+                </div>
+            )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 py-1">
+            <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-bold text-stone-800 truncate pr-6 group-hover:text-amber-600 transition-colors select-none">{resource.title}</h3>
+                {resource.type === 'YouTube' && <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-600 rounded font-bold select-none">VIDEO</span>}
+            </div>
+            <p className="text-sm text-stone-500 line-clamp-2 mb-2 select-none">{resource.description}</p>
+            <a 
+                href={resource.link} 
+                target="_blank" 
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-stone-400 hover:text-stone-700 transition-colors z-20 relative"
+                onPointerDown={(e) => e.stopPropagation()} // Stop drag on link click
+            >
+                <ExternalLink className="w-3 h-3" />
+                {resource.type === 'YouTube' ? 'Watch Now' : 'Visit / Download'}
+            </a>
+        </div>
+    </div>
+  );
+};
+
 
 const Resources = () => {
   const [showModal, setShowModal] = useState(false);
@@ -101,9 +212,29 @@ const Resources = () => {
     }
   ];
 
-  const { data: resources, addItem, deleteItem, updateItem, isCloud } = useCloudStorage('resources', 'resources', initialResources);
+  const { data: resources, addItem, deleteItem, updateItem, setAllItems, isCloud } = useCloudStorage('resources', 'resources', initialResources);
   const [playingVideo, setPlayingVideo] = useState(null); // Video ID to play
   
+  // DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+        // We are reordering the global list based on the move
+        const oldIndex = (resources || []).findIndex((item) => item.id === active.id);
+        const newIndex = (resources || []).findIndex((item) => item.id === over.id);
+        
+        if (oldIndex !== -1 && newIndex !== -1) {
+            const newResources = arrayMove(resources, oldIndex, newIndex);
+            setAllItems(newResources);
+        }
+    }
+  };
+
   // Form State
   const [newResource, setNewResource] = useState({
     title: '',
@@ -225,6 +356,11 @@ const Resources = () => {
       </header>
 
       {/* Expanding Accordion Layout */}
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
       <div className="flex-1 flex gap-4 overflow-hidden min-h-0">
         {categories.map((cat) => {
           const isActive = activeCategory === cat.name;
@@ -261,69 +397,29 @@ const Resources = () => {
                     <p>暂无资源</p>
                   </div>
                 ) : (
-                  catResources.map(res => {
-                    const youtubeId = getYoutubeId(res.link);
-                    return (
-                      <div key={res.id} className="group relative bg-white p-4 rounded-xl border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-200 transition-all flex gap-4 animate-fade-in-up">
-                         {/* Delete Button */}
-                         <button 
-                            onClick={(e) => handleDeleteResource(res.id, e)}
-                            className="absolute top-2 right-2 p-1.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-
-                        {/* Thumbnail/Icon */}
-                        <div className="shrink-0">
-                             {youtubeId ? (
-                                <div 
-                                    className="w-32 h-20 rounded-lg overflow-hidden bg-black relative shadow-sm group-hover:shadow-md transition-all cursor-pointer"
-                                    onClick={() => setPlayingVideo(youtubeId)}
-                                >
-                                    <img 
-                                        src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`} 
-                                        alt={res.title}
-                                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-8 h-8 bg-white/20 backdrop-blur rounded-full flex items-center justify-center hover:bg-white/30 transition-colors">
-                                            <Youtube className="w-4 h-4 text-white fill-current" />
-                                        </div>
-                                    </div>
-                                </div>
-                             ) : (
-                                <div className={`w-12 h-12 rounded-lg ${cat.color} bg-opacity-10 flex items-center justify-center`}>
-                                    {getTypeIcon(res.type)}
-                                </div>
-                             )}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0 py-1">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-bold text-stone-800 truncate pr-6 group-hover:text-amber-600 transition-colors">{res.title}</h3>
-                                {res.type === 'YouTube' && <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-600 rounded font-bold">VIDEO</span>}
-                            </div>
-                            <p className="text-sm text-stone-500 line-clamp-2 mb-2">{res.description}</p>
-                            <a 
-                                href={res.link} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-xs font-bold text-stone-400 hover:text-stone-700 transition-colors"
-                            >
-                                <ExternalLink className="w-3 h-3" />
-                                {res.type === 'YouTube' ? 'Watch Now' : 'Visit / Download'}
-                            </a>
-                        </div>
-                      </div>
-                    );
-                  })
+                  <SortableContext 
+                    items={catResources.map(r => r.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {catResources.map(res => (
+                        <SortableResourceItem 
+                            key={res.id} 
+                            resource={res} 
+                            onDelete={handleDeleteResource}
+                            onPlay={setPlayingVideo}
+                            categoryColor={cat.color}
+                            typeIcon={getTypeIcon(res.type)}
+                            getYoutubeId={getYoutubeId}
+                        />
+                    ))}
+                  </SortableContext>
                 )}
               </div>
             </div>
           );
         })}
       </div>
+      </DndContext>
 
       {/* Add Resource Modal */}
       {showModal && (
@@ -400,7 +496,7 @@ const Resources = () => {
                                 onChange={(val) => setNewResource({...newResource, content: val})} 
                                 placeholder="在此处记录详细笔记..."
                                 minHeight="h-full"
-                             />
+                            />
                         </div>
                     </div>
                     <button type="submit" className="w-full bg-stone-800 text-white py-2.5 rounded-lg font-bold hover:bg-stone-700 transition-all transform active:scale-95 shrink-0">

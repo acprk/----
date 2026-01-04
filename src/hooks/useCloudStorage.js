@@ -172,5 +172,15 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
     }
   };
 
-  return { data, loading, addItem, deleteItem, updateItem, isCloud: isSupabaseConfigured };
+  const setAllItems = (newItems) => {
+      setData(newItems);
+      if (!isSupabaseConfigured) {
+          setLocalData(newItems);
+      }
+      // Note: Cloud persistence for full list reorder is not fully implemented 
+      // without an explicit 'order' column in DB.
+      // This will allow UI reordering but might reset on refresh in Cloud mode.
+  };
+
+  return { data, loading, addItem, deleteItem, updateItem, setAllItems, isCloud: isSupabaseConfigured };
 };
