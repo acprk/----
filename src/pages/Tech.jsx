@@ -272,8 +272,8 @@ const Tech = () => {
 
       {/* View/Edit Article Modal */}
       {viewingArticle && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl overflow-hidden animate-fade-in border border-slate-200 h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-12 md:pt-24">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in border border-slate-200 h-[85vh] flex flex-col">
                 <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
                     <div className="flex items-center gap-2">
                         {viewingArticle.iconName && getIcon(viewingArticle.iconName)}
