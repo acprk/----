@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { MusicProvider } from './context/MusicContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Reading from './pages/Reading';
@@ -27,24 +28,25 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="/reading" replace />} />
-            <Route path="reading" element={<Reading />} />
-            <Route path="tech" element={<Tech />} />
-            <Route path="ideas" element={<Ideas />} />
-            <Route path="music" element={<Music />} />
-            <Route path="resources" element={<Resources />} />
-            <Route path="travel" element={<Travel />} />
-          </Route>
-        </Routes>
+      <MusicProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<Navigate to="/reading" replace />} />
+              <Route path="reading" element={<Reading />} />
+              <Route path="tech" element={<Tech />} />
+              <Route path="ideas" element={<Ideas />} />
+              <Route path="music" element={<Music />} />
+              <Route path="resources" element={<Resources />} />
+              <Route path="travel" element={<Travel />} />
+            </Route>
+          </Routes>
         </BrowserRouter>
       </MusicProvider>
     </AuthProvider>
