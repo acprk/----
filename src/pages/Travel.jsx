@@ -74,7 +74,7 @@ const Travel = () => {
     { id: 2, date: '2024-03-03', type: 'Marathon', name: 'Tokyo Marathon', distance: '42.195km', time: '3:30:15', pace: '4:59/km', notes: 'PB achieved in chilly rain.' },
   ];
 
-  const { data: trips, addItem: addTrip, deleteItem: deleteTrip, updateItem: updateTrip } = useCloudStorage('trips', 'trips', initialTrips);
+  const { data: trips, addItem: addTrip, deleteItem: deleteTrip, updateItem: updateTrip, isCloud } = useCloudStorage('trips', 'trips', initialTrips);
   const { data: sports, addItem: addSport, deleteItem: deleteSport } = useCloudStorage('sports_records', 'sports', initialSports);
   
   const [showModal, setShowModal] = useState(false);

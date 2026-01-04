@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Terminal, Cpu, Database, Globe, Plus, X, Trash2, FileText, Search } from 'lucide-react';
+import { Terminal, Cpu, Database, Globe, Plus, X, Trash2, FileText, Search, Cloud, CloudOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';

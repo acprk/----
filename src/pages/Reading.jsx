@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Book, Star, Clock, Quote, Bookmark, Plus, X, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Edit3 } from 'lucide-react';
+import { Book, Star, Clock, Quote, Bookmark, Plus, X, Trash2, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Edit3, Cloud, CloudOff } from 'lucide-react';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import AIAssistant from '../components/AIAssistant';
 import MarkdownEditor from '../components/MarkdownEditor';

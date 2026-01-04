@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3 } from 'lucide-react';
+import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3, Cloud, CloudOff } from 'lucide-react';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
 
@@ -100,7 +100,7 @@ const Resources = () => {
     }
   ];
 
-  const { data: resources, addItem, deleteItem, updateItem } = useCloudStorage('resources', 'resources', initialResources);
+  const { data: resources, addItem, deleteItem, updateItem, isCloud } = useCloudStorage('resources', 'resources', initialResources);
   const [playingVideo, setPlayingVideo] = useState(null); // Video ID to play
   
   // Form State

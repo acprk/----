@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lightbulb, FileText, FlaskConical, PenTool, Plus, X, Trash2, BookOpen, Search } from 'lucide-react';
+import { Lightbulb, FileText, FlaskConical, PenTool, Plus, X, Trash2, BookOpen, Search, Cloud, CloudOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -56,7 +56,7 @@ const Ideas = () => {
     }
   ];
 
-  const { data: ideas, addItem, deleteItem, updateItem } = useCloudStorage('ideas', 'ideas', initialIdeas);
+  const { data: ideas, addItem, deleteItem, updateItem, isCloud } = useCloudStorage('ideas', 'ideas', initialIdeas);
   const [showModal, setShowModal] = useState(false);
   const [viewingIdea, setViewingIdea] = useState(null);
   const [newIdea, setNewIdea] = useState({
