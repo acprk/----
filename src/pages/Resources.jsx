@@ -493,26 +493,62 @@ const Resources = () => {
         </div>
       )}
 
-      {/* Video Player Modal */}
+      {/* Video Player Modal - Draggable & Resizable */}
       {playingVideo && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in">
-             <div className="bg-black rounded-xl overflow-hidden shadow-2xl w-full max-w-4xl aspect-video relative">
-                <button 
-                    onClick={() => setPlayingVideo(null)}
-                    className="absolute top-4 right-4 text-white/50 hover:text-white z-10 bg-black/50 rounded-full p-1"
-                >
-                    <X size={24} />
-                </button>
-                <iframe 
-                    width="100%" 
-                    height="100%" 
-                    src={`https://www.youtube.com/embed/${playingVideo}?autoplay=1`} 
-                    title="YouTube video player" 
-                    frameBorder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                ></iframe>
-             </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+             {/* Backdrop - Click to close */}
+             <div 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity" 
+                onClick={() => setPlayingVideo(null)}
+             ></div>
+
+             <Rnd
+                default={{
+                    x: typeof window !== 'undefined' ? (window.innerWidth - 800) / 2 : 100,
+                    y: typeof window !== 'undefined' ? (window.innerHeight - 500) / 2 : 100,
+                    width: 800,
+                    height: 480,
+                }}
+                minWidth={320}
+                minHeight={200}
+                bounds="window"
+                className="pointer-events-auto z-50 bg-black rounded-xl overflow-hidden shadow-2xl border border-stone-800 flex flex-col"
+                dragHandleClassName="drag-handle"
+             >
+                {/* Drag Handle / Header */}
+                <div className="drag-handle h-10 bg-stone-900/90 backdrop-blur flex items-center justify-between px-4 cursor-move border-b border-stone-800 shrink-0 group">
+                    <div className="flex items-center gap-2 text-stone-400">
+                        <Youtube size={16} />
+                        <span className="text-xs font-bold uppercase tracking-wider">Video Player</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="text-stone-600 text-[10px] uppercase font-mono hidden group-hover:block">
+                            Drag to move • Resize edges
+                        </div>
+                        <button 
+                            onClick={() => setPlayingVideo(null)}
+                            className="text-stone-400 hover:text-white transition-colors bg-stone-800 hover:bg-red-600 rounded-full p-1"
+                        >
+                            <X size={14} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Video Content */}
+                <div className="flex-1 relative bg-black w-full h-full">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src={`https://www.youtube.com/embed/${playingVideo}?autoplay=1`} 
+                        title="YouTube video player" 
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                    ></iframe>
+                    {/* Overlay to prevent iframe capturing mouse events while resizing (optional, but Rnd handles resize handles outside usually) */}
+                </div>
+             </Rnd>
         </div>
       )}
     </div>
