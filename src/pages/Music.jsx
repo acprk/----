@@ -178,7 +178,14 @@ const Music = () => {
             {/* Player Logic */}
             {(() => {
                 const isBilibili = currentSong.link && (currentSong.link.includes('bilibili.com') || currentSong.link.startsWith('BV'));
-                const isYoutube = currentSong.link && (currentSong.link.includes('youtube.com') || currentSong.link.includes('youtu.be'));
+                // Robust YouTube detection
+                const getYouTubeId = (url) => {
+                    if (!url) return null;
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? match[2] : null;
+                };
+                const youtubeId = getYouTubeId(currentSong.link);
                 
                 if (isBilibili) {
                     return (
@@ -205,20 +212,12 @@ const Music = () => {
                             </div>
                         </div>
                     );
-                } else if (isYoutube) {
-                    // Extract Video ID
-                    let videoId = '';
-                    if (currentSong.link.includes('youtu.be')) {
-                        videoId = currentSong.link.split('youtu.be/')[1]?.split('?')[0];
-                    } else if (currentSong.link.includes('v=')) {
-                        videoId = currentSong.link.split('v=')[1]?.split('&')[0];
-                    }
-
+                } else if (youtubeId) {
                     return (
                         <div className="w-full flex justify-center">
                             <div className="relative w-full max-w-xl aspect-video bg-black rounded overflow-hidden shadow-lg">
                                 <iframe 
-                                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
                                     className="absolute inset-0 w-full h-full"
                                     frameBorder="0"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
