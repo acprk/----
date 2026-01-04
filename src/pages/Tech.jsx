@@ -104,8 +104,17 @@ const Tech = () => {
             <span className="text-sm font-bold tracking-wider">~/tech-share</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">技术分享 (Tech Share)</h1>
-          <p className="text-slate-500 mt-2 max-w-xl">
+          <p className="text-slate-500 mt-2 max-w-xl flex items-center gap-2">
             探索软件架构、算法和开发者工具。
+            {isCloud ? (
+                <span className="inline-flex items-center gap-1 text-green-600 text-xs px-2 py-0.5 bg-green-100 rounded-full">
+                    <Cloud size={10} /> Cloud Sync Active
+                </span>
+            ) : (
+                <span className="inline-flex items-center gap-1 text-orange-600 text-xs px-2 py-0.5 bg-orange-100 rounded-full" title="Connect to Supabase for Cloud Sync">
+                    <CloudOff size={10} /> Local Mode
+                </span>
+            )}
           </p>
         </div>
         <div className="flex gap-2 items-center">

@@ -23,11 +23,28 @@ const Layout = () => {
 
   return (
     <div className="flex min-h-screen bg-stone-50 font-serif">
+      {/* Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+            className="fixed inset-0 bg-black/50 z-30 md:hidden animate-fade-in"
+            onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-stone-200 fixed h-full z-10 hidden md:flex flex-col">
-        <div className="p-8 border-b border-stone-100">
-          <h1 className="text-xl font-bold text-stone-900 tracking-tight">我的空间</h1>
-          <p className="text-xs text-stone-500 mt-2">Rational & Academic</p>
+      <aside className={`
+        w-64 bg-white border-r border-stone-200 fixed h-full z-40 flex flex-col transition-transform duration-300 ease-in-out
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0
+      `}>
+        <div className="p-8 border-b border-stone-100 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-bold text-stone-900 tracking-tight">我的空间</h1>
+            <p className="text-xs text-stone-500 mt-2">Rational & Academic</p>
+          </div>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-stone-400 hover:text-stone-600">
+            <X className="w-6 h-6" />
+          </button>
         </div>
         
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
@@ -35,6 +52,7 @@ const Layout = () => {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={handleNavClick}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-sm transition-all duration-200 ${
                   isActive
@@ -61,15 +79,16 @@ const Layout = () => {
       </aside>
 
       {/* Mobile Header (Visible only on small screens) */}
-      <header className="md:hidden fixed top-0 w-full bg-white border-b border-stone-200 z-20 px-4 py-3 flex justify-between items-center">
-        <span className="font-bold text-stone-900">My Space</span>
-        <button onClick={handleLogout} className="text-stone-500">
-            <LogOut className="w-5 h-5" />
+      <header className="md:hidden fixed top-0 w-full bg-white border-b border-stone-200 z-20 px-4 py-3 flex justify-between items-center shadow-sm">
+        <button onClick={() => setIsMobileMenuOpen(true)} className="text-stone-600 p-1">
+            <Menu className="w-6 h-6" />
         </button>
+        <span className="font-bold text-stone-900">My Space</span>
+        <div className="w-8"></div> {/* Spacer for centering */}
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 p-8 md:p-12 pt-20 md:pt-12 overflow-y-auto">
+      <main className="flex-1 md:ml-64 p-4 md:p-12 pt-20 md:pt-12 overflow-y-auto w-full">
         <div className="max-w-4xl mx-auto">
            <Outlet />
         </div>

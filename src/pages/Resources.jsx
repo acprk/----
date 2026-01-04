@@ -195,7 +195,18 @@ const Resources = () => {
     <div className="h-[calc(100vh-100px)] flex flex-col animate-fade-in">
       <header className="flex justify-between items-center mb-6 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-stone-800 tracking-tight">资源分享 (Resource Share)</h1>
+          <h1 className="text-3xl font-bold text-stone-800 tracking-tight flex items-center gap-3">
+             资源分享 (Resource Share)
+             {isCloud ? (
+                <span className="inline-flex items-center gap-1 text-green-600 text-xs px-2 py-0.5 bg-green-100 rounded-full font-normal">
+                    <Cloud size={10} /> Sync
+                </span>
+            ) : (
+                <span className="inline-flex items-center gap-1 text-orange-600 text-xs px-2 py-0.5 bg-orange-100 rounded-full font-normal">
+                    <CloudOff size={10} /> Local
+                </span>
+            )}
+          </h1>
           <p className="text-stone-500 mt-1">
             <span className="mr-4">📚 论文</span>
             <span className="mr-4">🎵 音乐</span>

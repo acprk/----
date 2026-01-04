@@ -236,7 +236,18 @@ const Travel = () => {
       <header className="border-b border-orange-200 pb-6 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-bold text-orange-950 font-serif tracking-tight">旅游见闻 (Travel Notes)</h1>
-          <p className="text-orange-800/60 mt-2 text-lg italic">"点亮地球的每一个角落"</p>
+          <p className="text-orange-800/60 mt-2 text-lg italic flex items-center gap-2">
+            "点亮地球的每一个角落"
+            {isCloud ? (
+                <span className="inline-flex items-center gap-1 text-green-600 text-xs px-2 py-0.5 bg-green-100 rounded-full not-italic">
+                    <Cloud size={10} /> Sync Active
+                </span>
+            ) : (
+                <span className="inline-flex items-center gap-1 text-orange-600 text-xs px-2 py-0.5 bg-orange-100 rounded-full not-italic">
+                    <CloudOff size={10} /> Local
+                </span>
+            )}
+          </p>
         </div>
         <div className="flex items-center gap-4 text-orange-900/60">
            <div className="text-right hidden md:block">

@@ -128,7 +128,18 @@ const Ideas = () => {
             <Lightbulb className="w-8 h-8 text-indigo-600" />
             论文灵感 (Paper Ideas)
           </h1>
-          <p className="text-indigo-900/60 mt-2 text-sm font-medium">记录研究方向、假设和实验进度。</p>
+          <p className="text-indigo-900/60 mt-2 text-sm font-medium flex items-center gap-2">
+            记录研究方向、假设和实验进度。
+            {isCloud ? (
+                <span className="inline-flex items-center gap-1 text-green-600 text-xs px-2 py-0.5 bg-green-100 rounded-full">
+                    <Cloud size={10} /> Cloud Sync Active
+                </span>
+            ) : (
+                <span className="inline-flex items-center gap-1 text-orange-600 text-xs px-2 py-0.5 bg-orange-100 rounded-full" title="Connect to Supabase for Cloud Sync">
+                    <CloudOff size={10} /> Local Mode
+                </span>
+            )}
+          </p>
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
             <div className="relative">

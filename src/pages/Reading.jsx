@@ -116,7 +116,7 @@ const Reading = () => {
     }
   ];
 
-  const { data: books, addItem, deleteItem, updateItem } = useCloudStorage('books', 'books', initialBooks);
+  const { data: books, addItem, deleteItem, updateItem, isCloud } = useCloudStorage('books', 'books', initialBooks);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
