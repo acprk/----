@@ -68,6 +68,21 @@ export const AuthProvider = ({ children }) => {
     return { data, error };
   };
 
+  // Update Profile
+  const updateProfile = async (updates) => {
+    if (!isSupabaseConfigured) return { error: { message: "Supabase not configured" } };
+
+    const { data, error } = await supabase.auth.updateUser({
+      data: updates
+    });
+    
+    if (data?.user) {
+      setUser(data.user);
+    }
+    
+    return { data, error };
+  };
+
   const logout = async () => {
     if (!isSupabaseConfigured) {
         // Local fallback
