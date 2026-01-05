@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Calendar, Camera, Navigation, Map as MapIcon, Plus, X, Trash2, Activity, Timer, Trophy, Edit2, Search, Cloud, CloudOff } from 'lucide-react';
+import { MapPin, Calendar, Camera, Navigation, Map as MapIcon, Plus, X, Trash2, Activity, Timer, Trophy, Edit2, Search, Cloud, CloudOff, Globe } from 'lucide-react';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";

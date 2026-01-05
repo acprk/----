@@ -54,19 +54,23 @@ const MarkdownEditor = ({ value, onChange, placeholder, minHeight = "min-h-[400p
 
   const handlePaste = (e) => {
     const items = e.clipboardData.items;
+    let hasImage = false;
     for (const item of items) {
       if (item.type.indexOf('image') !== -1) {
         e.preventDefault();
+        hasImage = true;
         const file = item.getAsFile();
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64 = event.target.result;
-          const imageMarkdown = `\n![Pasted Image](${base64})\n`;
+          // Insert image markdown with base64 data
+          const imageMarkdown = `![Pasted Image](${base64})`;
           insertText(imageMarkdown);
         };
         reader.readAsDataURL(file);
       }
     }
+    // If no image was handled, let default paste happen (text)
   };
 
   const handleImportClick = () => {

@@ -225,6 +225,75 @@ const Music = () => {
             </div>
         </div>
       )}
+
+      {/* Network Search Modal */}
+      {showSearchModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in border border-rose-100 flex flex-col max-h-[85vh]">
+                <div className="p-4 border-b border-rose-100 flex justify-between items-center bg-rose-50/50 shrink-0">
+                    <h3 className="font-bold text-rose-900 flex items-center gap-2">
+                        <Search className="w-5 h-5" />
+                        联网搜索音乐 (iTunes API)
+                    </h3>
+                    <button onClick={() => { setShowSearchModal(false); setNetworkResults([]); }} className="text-rose-400 hover:text-rose-600">
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="p-4 border-b border-rose-50 shrink-0">
+                    <div className="relative">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                        <input 
+                            autoFocus
+                            type="text" 
+                            placeholder="输入歌曲名、艺人或专辑..." 
+                            className="pl-9 pr-24 py-3 bg-slate-50 border border-rose-100 rounded-lg text-sm focus:outline-none focus:border-rose-500 w-full shadow-inner"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleNetworkSearch(e.target.value);
+                            }}
+                        />
+                        <button 
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 bg-rose-600 text-white text-xs font-bold rounded hover:bg-rose-700 transition-colors"
+                            onClick={(e) => handleNetworkSearch(e.target.previousSibling.value)}
+                            disabled={isSearching}
+                        >
+                            {isSearching ? '搜索中...' : '搜索'}
+                        </button>
+                    </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50/30">
+                    {networkResults.length === 0 && !isSearching && (
+                        <div className="text-center py-12 text-slate-400">
+                            <MusicIcon className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                            <p>输入关键词开始搜索全球音乐库</p>
+                        </div>
+                    )}
+                    {networkResults.map((result) => (
+                        <div key={result.trackId} className="flex items-center gap-4 p-3 bg-white border border-rose-50 rounded-xl hover:shadow-md hover:border-rose-200 transition-all group">
+                            <img 
+                                src={result.artworkUrl100} 
+                                alt={result.trackName} 
+                                className="w-16 h-16 rounded-lg object-cover shadow-sm"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <h4 className="font-bold text-slate-800 truncate">{result.trackName}</h4>
+                                <p className="text-xs text-slate-500 truncate">{result.artistName} • {result.collectionName}</p>
+                                {result.previewUrl && (
+                                    <audio controls src={result.previewUrl} className="mt-2 h-6 w-full max-w-[200px] opacity-60 hover:opacity-100 transition-opacity" />
+                                )}
+                            </div>
+                            <button 
+                                onClick={() => handleImportMusic(result)}
+                                className="px-4 py-2 bg-rose-50 text-rose-600 text-xs font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-colors shrink-0 flex items-center gap-1"
+                            >
+                                <Plus className="w-3 h-3" />
+                                导入
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -293,17 +293,6 @@ const Reading = () => {
               )}
             </div>
           </div>
-
-          <div className="bg-amber-900 text-amber-50 p-6 rounded-sm">
-            <h3 className="font-bold text-lg mb-2">每月挑战</h3>
-            <p className="text-amber-200/80 text-sm mb-4">阅读 3 本 19 世纪的经典著作。</p>
-            <div className="flex gap-2 mb-2 font-sans">
-              <div className="w-8 h-8 rounded-full border border-amber-500/50 flex items-center justify-center bg-amber-800">1</div>
-              <div className="w-8 h-8 rounded-full border border-amber-500/50 flex items-center justify-center text-amber-500/50">2</div>
-              <div className="w-8 h-8 rounded-full border border-amber-500/50 flex items-center justify-center text-amber-500/50">3</div>
-            </div>
-            <p className="text-xs text-amber-400 mt-2 font-sans">1/3 完成</p>
-          </div>
         </aside>
       </div>
 
