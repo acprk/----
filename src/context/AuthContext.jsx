@@ -1,36 +1,103 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
+    if (!isSupabaseConfigured) {
+        // Fallback for local-only mode (legacy key auth support could go here, 
+        // but for now we just finish loading)
+        setIsLoading(false);
+        return;
     }
-    setIsLoading(false);
+
+    // Check active sessions and subscribe to auth changes
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (key) => {
-    // You can change the key here. Currently set to '20260105'
-    if (key === '20260105') {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAuthenticated', 'true');
-      return true;
-    }
-    return false;
+  // Login with Email
+  const login = async (email, password) => {
+    if (!isSupabaseConfigured) return { error: { message: "Supabase not configured" } };
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { data, error };
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('isAuthenticated');
+  // Register
+  const signup = async (email, password) => {
+    if (!isSupabaseConfigured) return { error: { message: "Supabase not configured" } };
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    return { data, error };
+  };
+
+  // Reset Password
+  const resetPassword = async (email) => {
+    if (!isSupabaseConfigured) return { error: { message: "Supabase not configured" } };
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password', // We might need a route for this
+    });
+    return { data, error };
+  };
+
+  const logout = async () => {
+    if (!isSupabaseConfigured) {
+        // Local fallback
+        setUser(null);
+        return;
+    }
+    await supabase.auth.signOut();
+  };
+
+  // Legacy local key login support (optional, for backward compatibility if needed)
+  const loginWithKey = (key) => {
+     if (key === '20260105') {
+         // Mock a user for local mode
+         const mockUser = { id: 'local-user', email: 'local@admin.com' };
+         setUser(mockUser);
+         return true;
+     }
+     return false;
+  };
+
+  const value = {
+    isAuthenticated: !!user,
+    user,
+    login,
+    signup,
+    logout,
+    resetPassword,
+    loginWithKey,
+    isLoading,
+    isSupabaseConfigured
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, isLoading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

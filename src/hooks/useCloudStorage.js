@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useLocalStorage } from './useLocalStorage';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * A hook that syncs data with Supabase if configured, otherwise falls back to LocalStorage.
@@ -15,6 +16,9 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
   const [localData, setLocalData] = useLocalStorage(localStorageKey, initialValue);
   const [data, setData] = useState(localData);
   const [loading, setLoading] = useState(true);
+  
+  // Get auth state
+  const { user, isSupabaseConfigured } = useAuth();
 
   // If Supabase is configured, fetch from cloud
   useEffect(() => {
@@ -26,6 +30,8 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
 
     const fetchData = async () => {
       try {
+        // If we have a user, RLS should handle filtering, but we can also be explicit if needed.
+        // Usually .select('*') is enough if RLS is on.
         const { data: cloudData, error } = await supabase
           .from(tableName)
           .select('*')
@@ -33,14 +39,11 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
 
         if (error) {
             console.error(`Error fetching ${tableName}:`, error);
-            // Fallback to local data on error? Or keep empty? 
-            // Let's stick to cloud data if we are in cloud mode, to avoid confusion.
             return;
         }
 
         if (cloudData) {
             setData(cloudData);
-            // Sync cloud data back to local storage to keep cache fresh
             setLocalData(cloudData);
         }
       } catch (err) {
@@ -56,7 +59,6 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
     const subscription = supabase
       .channel(tableName)
       .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, (payload) => {
-        // Refresh data on any change
         fetchData();
       })
       .subscribe();
@@ -64,41 +66,9 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [tableName]); // Only run on mount or table change
+  }, [tableName, isSupabaseConfigured, user]); // Re-fetch if user changes
 
-  // Wrapper for setting data
-  const updateData = async (newData) => {
-    // Optimistic update for UI
-    setData(newData);
-    
-    // If local mode, just update local storage
-    if (!isSupabaseConfigured) {
-      setLocalData(newData);
-      return;
-    }
-
-    // If cloud mode, we need to handle Insert/Update/Delete based on diffs?
-    // This is hard with a generic hook because we receive the "New Full List".
-    // It's better to expose specific methods: add, remove.
-    // But to keep compatibility with existing code which uses setList(newList), 
-    // we might need to be clever or refactor the calling code.
-    
-    // STRATEGY: 
-    // For this refactor, we will CHANGE the return signature of this hook to be:
-    // { data, add, remove, update } instead of [data, setData]
-    // But to minimize code changes in components, let's try to adapt.
-    
-    // Actually, "setData" in components is often used like: setMusic([...music, newItem])
-    // If we want to sync with DB, we should insert the newItem to DB.
-    
-    console.warn("Direct setData not supported in Cloud Mode for bulk updates. Use specific add/remove functions.");
-  };
-
-  // To properly support the existing "setList" pattern in a Cloud environment is inefficient (delete all, insert all).
-  // So we will provide helper functions that components should use instead of setList.
-  
   const addItem = async (item) => {
-    // Ensure created_at exists for both local and cloud
     const itemToSave = { 
         ...item, 
         created_at: item.created_at || new Date().toISOString() 
@@ -110,31 +80,27 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
       return;
     }
 
-    // For cloud, we generally want the DB to generate IDs if they are serial integers.
-    // We strip the ID from the item so Supabase generates a new valid ID (int/uuid).
-    // This prevents "integer out of range" or "invalid input syntax for type uuid" errors.
     const { id, ...itemForCloud } = itemToSave;
     
+    // Attach user_id if user is logged in
+    if (user) {
+        itemForCloud.user_id = user.id;
+    }
+
     const { error } = await supabase.from(tableName).insert([itemForCloud]);
     if (error) {
         console.error("Error adding item:", error);
         alert("Failed to add to cloud: " + error.message);
     }
-    // Realtime subscription will update the list
   };
 
   const deleteItem = async (id) => {
-    // 1. Optimistic update (Memory State)
-    // Use loose comparison (!=) to handle string/number mismatches (e.g. "123" vs 123)
     const newData = (data || []).filter(item => item.id != id);
     setData(newData);
-
-    // 2. Always update Local Storage immediately (Force Local Delete)
     setLocalData(newData);
 
     if (!isSupabaseConfigured) return;
 
-    // 3. Try Cloud Delete
     try {
         const { error } = await supabase
           .from(tableName)
@@ -142,9 +108,7 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
           .eq('id', id);
 
         if (error) {
-          console.error('Cloud delete failed (likely due to invalid ID mismatch or permission), but item was removed locally:', error);
-          // We intentionally suppress the alert here. 
-          // If the item had a bad ID (legacy data), it's now gone from UI/Local, which is what the user wants.
+          console.error('Cloud delete failed:', error);
         }
     } catch (err) {
         console.error("Unexpected error during delete:", err);
@@ -152,7 +116,6 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
   };
 
   const updateItem = async (updatedItem) => {
-    // Optimistic update: immediately update local state
     setData(prev => (prev || []).map(item => item.id === updatedItem.id ? updatedItem : item));
 
     if (!isSupabaseConfigured) {
@@ -160,7 +123,6 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
       return;
     }
 
-    // Remove client-side only fields if necessary, or ensure DB schema matches
     const { error } = await supabase
       .from(tableName)
       .update(updatedItem)
@@ -177,9 +139,6 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
       if (!isSupabaseConfigured) {
           setLocalData(newItems);
       }
-      // Note: Cloud persistence for full list reorder is not fully implemented 
-      // without an explicit 'order' column in DB.
-      // This will allow UI reordering but might reset on refresh in Cloud mode.
   };
 
   return { data, loading, addItem, deleteItem, updateItem, setAllItems, isCloud: isSupabaseConfigured };
