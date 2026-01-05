@@ -19,6 +19,9 @@ const Music = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [networkResults, setNetworkResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   
   const [newMusic, setNewMusic] = useState({
       title: '',
@@ -139,13 +142,22 @@ const Music = () => {
                    onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
-            <button 
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white text-sm font-medium rounded-md hover:bg-rose-700 shadow-md shadow-rose-200 transition-all hover:-translate-y-0.5 justify-center"
-            >
-              <Plus className="w-4 h-4" />
-              添加音乐 (Add Music)
-            </button>
+            <div className="flex gap-2">
+                <button 
+                    onClick={() => setShowSearchModal(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white text-rose-600 border border-rose-200 text-sm font-medium rounded-md hover:bg-rose-50 shadow-sm transition-all"
+                >
+                    <Search className="w-4 h-4" />
+                    联网搜索
+                </button>
+                <button 
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white text-sm font-medium rounded-md hover:bg-rose-700 shadow-md shadow-rose-200 transition-all hover:-translate-y-0.5 justify-center"
+                >
+                    <Plus className="w-4 h-4" />
+                    添加音乐
+                </button>
+            </div>
         </div>
       </header>
 
