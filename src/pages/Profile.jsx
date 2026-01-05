@@ -23,6 +23,38 @@ const Profile = () => {
     }
   }, [user]);
 
+  const handleAvatarUpload = async (event) => {
+    try {
+      setUploading(true);
+      
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      let { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      
+      setFormData(prev => ({ ...prev, avatarUrl: data.publicUrl }));
+      setMessage({ type: 'success', text: 'Image uploaded successfully!' });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Error uploading image: ' + error.message });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
