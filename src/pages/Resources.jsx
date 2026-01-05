@@ -449,87 +449,168 @@ const Resources = () => {
       {/* Search & Link Extractor Modal */}
       {showSearchModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in border border-stone-200">
-                <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-fade-in border border-stone-200 h-[80vh] flex flex-col">
+                <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50/50 shrink-0">
                     <h3 className="font-bold text-stone-800 flex items-center gap-2">
                         <Globe className="w-5 h-5 text-blue-500" />
-                        全网资源搜索 & 链接提取
+                        全网资源搜索 (Built-in Search)
                     </h3>
                     <button onClick={() => setShowSearchModal(false)} className="text-stone-400 hover:text-stone-600">
                         <X size={20} />
                     </button>
                 </div>
-                <div className="p-6 space-y-6">
-                    {/* Search Section */}
-                    <div>
-                        <h4 className="text-xs font-bold text-stone-500 uppercase mb-3">多平台搜索 (Multi-Platform Search)</h4>
-                        <div className="relative mb-3">
-                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                             <input 
-                                type="text" 
-                                placeholder="输入关键词 (e.g., React Hooks, Transformer Paper)..."
-                                className="w-full pl-9 pr-4 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-                                id="resource-search-input"
-                                onKeyDown={(e) => {
-                                    if(e.key === 'Enter') openExternalSearch('google', e.target.value);
-                                }}
-                             />
-                        </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                             <button onClick={() => openExternalSearch('google', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors">Google</button>
-                             <button onClick={() => openExternalSearch('github', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-stone-800 hover:text-white hover:border-stone-800 transition-colors">GitHub</button>
-                             <button onClick={() => openExternalSearch('stackoverflow', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors">StackOverflow</button>
-                             <button onClick={() => openExternalSearch('arxiv', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors">ArXiv</button>
-                             <button onClick={() => openExternalSearch('juejin', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors">掘金 (Juejin)</button>
-                             <button onClick={() => openExternalSearch('zhihu', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors">知乎 (Zhihu)</button>
-                             <button onClick={() => openExternalSearch('bilibili', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-colors">Bilibili</button>
-                        </div>
+                
+                <div className="flex-1 overflow-hidden flex flex-col">
+                    {/* Tabs & Search Bar */}
+                    <div className="p-4 border-b border-stone-100 bg-white">
+                         {/* Platform Tabs */}
+                         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                            {[
+                                { id: 'github', name: 'GitHub', icon: FileCode, color: 'text-stone-800' },
+                                { id: 'stackoverflow', name: 'StackOverflow', icon: Database, color: 'text-orange-600' },
+                                { id: 'arxiv', name: 'ArXiv (Papers)', icon: FileText, color: 'text-red-600' },
+                            ].map(platform => (
+                                <button
+                                    key={platform.id}
+                                    onClick={() => {
+                                        setActiveSearchPlatform(platform.id);
+                                        if(searchQuery) handleInternalSearch(platform.id, searchQuery);
+                                    }}
+                                    className={`
+                                        flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border
+                                        ${activeSearchPlatform === platform.id 
+                                            ? 'bg-stone-800 text-white border-stone-800' 
+                                            : 'bg-white border-stone-200 text-stone-500 hover:bg-stone-50'
+                                        }
+                                    `}
+                                >
+                                    <platform.icon className="w-3 h-3" />
+                                    {platform.name}
+                                </button>
+                            ))}
+                         </div>
+
+                         {/* Search Input */}
+                         <div className="relative flex gap-2">
+                             <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder={`Search on ${activeSearchPlatform}...`}
+                                    className="w-full pl-9 pr-4 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if(e.key === 'Enter') handleInternalSearch(activeSearchPlatform, searchQuery);
+                                    }}
+                                />
+                             </div>
+                             <button 
+                                onClick={() => handleInternalSearch(activeSearchPlatform, searchQuery)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                disabled={isSearching}
+                             >
+                                {isSearching ? 'Searching...' : 'Search'}
+                             </button>
+                         </div>
                     </div>
 
-                    <div className="border-t border-stone-100 pt-4">
-                        <h4 className="text-xs font-bold text-stone-500 uppercase mb-3 flex items-center gap-2">
-                            <Link2 className="w-4 h-4" />
-                            链接提取工具 (Link Extractor)
-                        </h4>
-                        <textarea 
-                            className="w-full h-24 p-3 text-sm border border-stone-200 rounded-lg focus:outline-none focus:border-emerald-500 resize-none mb-2 font-mono"
-                            placeholder="在此处粘贴包含链接的文本，我们将自动提取其中的 URL..."
-                            value={linkExtractText}
-                            onChange={(e) => setLinkExtractText(e.target.value)}
-                        ></textarea>
-                        <button 
-                            onClick={handleExtractLinks}
-                            className="w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors mb-4"
-                        >
-                            提取链接
-                        </button>
-                        
-                        {extractedLinks.length > 0 && (
-                            <div className="bg-emerald-50 rounded-lg p-3 max-h-32 overflow-y-auto space-y-2 border border-emerald-100">
-                                {extractedLinks.map((link, idx) => (
-                                    <div key={idx} className="flex items-center justify-between gap-2 bg-white p-2 rounded border border-emerald-100">
-                                        <span className="text-xs text-stone-600 truncate flex-1 font-mono">{link}</span>
-                                        <div className="flex gap-1 shrink-0">
-                                            <a href={link} target="_blank" rel="noreferrer" className="p-1 hover:bg-stone-100 rounded text-emerald-600">
-                                                <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                            <button 
-                                                onClick={() => {
-                                                    // Quick add to new resource
-                                                    setNewResource({...newResource, link: link, title: 'New Resource'});
-                                                    setShowSearchModal(false);
-                                                    setShowModal(true);
-                                                }}
-                                                className="p-1 hover:bg-stone-100 rounded text-emerald-600"
-                                                title="Add to Resources"
-                                            >
-                                                <Plus className="w-3 h-3" />
-                                            </button>
-                                        </div>
+                    {/* Results Area */}
+                    <div className="flex-1 overflow-y-auto p-4 bg-stone-50/30">
+                        {searchResults.length === 0 && !isSearching && (
+                            <div className="text-center py-12 text-stone-400">
+                                <Search className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p className="text-sm">输入关键词并按回车搜索</p>
+                                <div className="mt-8 pt-8 border-t border-stone-100 max-w-md mx-auto">
+                                    <p className="text-xs font-bold text-stone-500 uppercase mb-3">外部链接 (External Links)</p>
+                                    <div className="flex flex-wrap justify-center gap-2">
+                                        <button onClick={() => openExternalSearch('google', searchQuery)} className="text-xs px-2 py-1 bg-white border border-stone-200 rounded text-stone-500 hover:text-blue-600">Google</button>
+                                        <button onClick={() => openExternalSearch('bilibili', searchQuery)} className="text-xs px-2 py-1 bg-white border border-stone-200 rounded text-stone-500 hover:text-pink-600">Bilibili</button>
+                                        <button onClick={() => openExternalSearch('zhihu', searchQuery)} className="text-xs px-2 py-1 bg-white border border-stone-200 rounded text-stone-500 hover:text-blue-600">Zhihu</button>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {isSearching && (
+                            <div className="space-y-3">
+                                {[1,2,3].map(i => (
+                                    <div key={i} className="h-24 bg-white rounded-xl border border-stone-100 animate-pulse"></div>
                                 ))}
                             </div>
                         )}
+
+                        <div className="space-y-3">
+                            {searchResults.map((item) => (
+                                <div key={item.id} className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm hover:shadow-md transition-all group">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-stone-800 text-sm mb-1 truncate" dangerouslySetInnerHTML={{__html: item.title}}></h4>
+                                            <p className="text-xs text-stone-500 line-clamp-2 mb-2">{item.description}</p>
+                                            <div className="flex items-center gap-3 text-[10px] text-stone-400 font-mono">
+                                                <span className="px-1.5 py-0.5 bg-stone-100 rounded text-stone-600">{item.source}</span>
+                                                <span>{item.meta}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-2 shrink-0">
+                                            <a 
+                                                href={item.link} 
+                                                target="_blank" 
+                                                rel="noreferrer" 
+                                                className="p-2 text-stone-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Open Link"
+                                            >
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                            <button 
+                                                onClick={() => importSearchResult(item)}
+                                                className="p-2 text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                title="Import to Resources"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Link Extractor (Collapsed/Small) */}
+                    <div className="p-3 border-t border-stone-100 bg-stone-50 text-center">
+                        <button 
+                            onClick={() => {
+                                const text = prompt("Paste text to extract links:");
+                                if(text) {
+                                    setLinkExtractText(text);
+                                    handleExtractLinks(); // This needs to be slightly adjusted to work with new state or just use the prompt text
+                                    // Actually, let's keep it simple: Just a button to toggle the old extractor if needed, or just leave it out as search is main focus now.
+                                    // Let's implement a simple extractor here.
+                                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                                    const matches = text.match(urlRegex);
+                                    if (matches) {
+                                        if(confirm(`Found ${matches.length} links. Add them all?`)) {
+                                            matches.forEach(link => {
+                                                 addItem({
+                                                    id: Date.now() + Math.random(),
+                                                    title: 'Extracted Link',
+                                                    link: link,
+                                                    category: 'Tools',
+                                                    type: 'Link',
+                                                    description: 'Extracted from text'
+                                                 });
+                                            });
+                                        }
+                                    } else {
+                                        alert("No links found.");
+                                    }
+                                }
+                            }}
+                            className="text-xs font-bold text-stone-500 hover:text-stone-800 flex items-center justify-center gap-2"
+                        >
+                            <Link2 className="w-3 h-3" />
+                            Need to extract links from text? Click here
+                        </button>
                     </div>
                 </div>
             </div>
