@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Music as MusicIcon, Play, Pause, Plus, X, Trash2, Search, ExternalLink, Cloud, CloudOff } from 'lucide-react';
+import { Music as MusicIcon, Play, Pause, Plus, X, Trash2, Search, ExternalLink, Cloud, CloudOff, Globe } from 'lucide-react';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import { useMusic } from '../context/MusicContext';
 

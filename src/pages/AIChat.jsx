@@ -270,7 +270,7 @@ const AIChat = () => {
                         />
                     </div>
                     <div className="flex gap-2 mt-2 flex-wrap">
-                        {['gpt-3.5-turbo', 'gpt-4', 'claude-3-opus', 'deepseek-chat'].map(m => (
+                        {['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku', 'gemini-pro', 'gemini-1.5-pro', 'gemini-1.5-flash', 'deepseek-chat', 'deepseek-coder', 'moonshot-v1-8k'].map(m => (
                             <button 
                                 key={m}
                                 onClick={() => setModel(m)}

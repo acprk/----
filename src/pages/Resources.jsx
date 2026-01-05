@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3, Cloud, CloudOff } from 'lucide-react';
+import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3, Cloud, CloudOff, Globe, Search, Link2 } from 'lucide-react';
 import { Rnd } from 'react-rnd';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
@@ -117,6 +117,9 @@ const SortableResourceItem = ({ resource, onDelete, onPlay, categoryColor, typeI
 
 const Resources = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [linkExtractText, setLinkExtractText] = useState('');
+  const [extractedLinks, setExtractedLinks] = useState([]);
   const [editingResource, setEditingResource] = useState(null);
   const [activeCategory, setActiveCategory] = useState('Papers'); // Default active
 
@@ -233,6 +236,28 @@ const Resources = () => {
             setAllItems(newResources);
         }
     }
+  };
+
+  const openExternalSearch = (platform, query) => {
+    let url = '';
+    const q = encodeURIComponent(query);
+    switch(platform) {
+        case 'google': url = `https://www.google.com/search?q=${q}`; break;
+        case 'github': url = `https://github.com/search?q=${q}`; break;
+        case 'stackoverflow': url = `https://stackoverflow.com/search?q=${q}`; break;
+        case 'arxiv': url = `https://arxiv.org/search/?query=${q}&searchtype=all`; break;
+        case 'juejin': url = `https://juejin.cn/search?query=${q}`; break;
+        case 'zhihu': url = `https://www.zhihu.com/search?type=content&q=${q}`; break;
+        case 'bilibili': url = `https://search.bilibili.com/all?keyword=${q}`; break;
+        default: return;
+    }
+    window.open(url, '_blank');
+  };
+
+  const handleExtractLinks = () => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = linkExtractText.match(urlRegex);
+    setExtractedLinks(matches || []);
   };
 
   // Form State
