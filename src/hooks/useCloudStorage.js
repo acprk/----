@@ -12,13 +12,16 @@ import { useAuth } from '../context/AuthContext';
  * @returns {[any, Function]} - [data, setData]
  */
 export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
+  const { user, isSupabaseConfigured } = useAuth();
+  
+  // Use a user-specific key for local storage to prevent data bleeding between users on the same device
+  // when falling back to local storage or caching.
+  const userSpecificKey = user ? `${localStorageKey}_${user.id}` : localStorageKey;
+
   // Always use local storage as a base/fallback
-  const [localData, setLocalData] = useLocalStorage(localStorageKey, initialValue);
+  const [localData, setLocalData] = useLocalStorage(userSpecificKey, initialValue);
   const [data, setData] = useState(localData);
   const [loading, setLoading] = useState(true);
-  
-  // Get auth state
-  const { user, isSupabaseConfigured } = useAuth();
 
   // If Supabase is configured, fetch from cloud
   useEffect(() => {
@@ -30,12 +33,19 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
 
     const fetchData = async () => {
       try {
-        // If we have a user, RLS should handle filtering, but we can also be explicit if needed.
-        // Usually .select('*') is enough if RLS is on.
-        const { data: cloudData, error } = await supabase
+        // Construct query
+        let query = supabase
           .from(tableName)
           .select('*')
           .order('created_at', { ascending: false });
+        
+        // Explicitly filter by user_id to ensure isolation on the client side as well,
+        // acting as a safeguard if RLS is not strictly configured.
+        if (user) {
+            query = query.eq('user_id', user.id);
+        }
+
+        const { data: cloudData, error } = await query;
 
         if (error) {
             console.error(`Error fetching ${tableName}:`, error);
@@ -44,7 +54,10 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
 
         if (cloudData) {
             setData(cloudData);
-            setLocalData(cloudData);
+            // We don't necessarily want to overwrite localData with cloud data for offline cache 
+            // if we are treating them separately, but for simple sync, this is okay.
+            // However, be careful not to mix user data in local storage if multiple users login on same device.
+            // ideally local storage key should include user id.
         }
       } catch (err) {
         console.error(err);
