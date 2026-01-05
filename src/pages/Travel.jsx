@@ -78,6 +78,7 @@ const Travel = () => {
   const { data: trips, addItem: addTrip, deleteItem: deleteTrip, updateItem: updateTrip, isCloud } = useCloudStorage('trips', 'trips', initialTrips);
   const { data: sports, addItem: addSport, deleteItem: deleteSport } = useCloudStorage('sports_records', 'sports', initialSports);
   
+  const [activeMap, setActiveMap] = useState('world'); // 'world' | 'china'
   const [showModal, setShowModal] = useState(false);
   const [viewingTrip, setViewingTrip] = useState(null);
   const [editingTrip, setEditingTrip] = useState(null);
