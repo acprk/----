@@ -5,7 +5,7 @@ import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music, Menu, X, Bot, U
 import GlobalMusicPlayer from './GlobalMusicPlayer';
 
 const Layout = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
