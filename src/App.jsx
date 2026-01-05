@@ -11,6 +11,7 @@ import Resources from './pages/Resources';
 import Travel from './pages/Travel';
 import Music from './pages/Music';
 import AIChat from './pages/AIChat';
+import Profile from './pages/Profile';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
