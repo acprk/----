@@ -87,9 +87,12 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
         created_at: item.created_at || new Date().toISOString() 
     };
 
+    // Optimistic Update: Update local state immediately for better UX
+    // Even if cloud sync fails, user sees the item (saved in local storage with user isolation)
+    setLocalData(prev => [itemToSave, ...prev]);
+    setData(prev => [itemToSave, ...prev]);
+
     if (!isSupabaseConfigured) {
-      setLocalData(prev => [itemToSave, ...prev]);
-      setData(prev => [itemToSave, ...prev]);
       return;
     }
 
@@ -103,33 +106,14 @@ export const useCloudStorage = (tableName, localStorageKey, initialValue) => {
     // Attempt 1: Try to insert with user_id (Preferred for isolation)
     let { error } = await supabase.from(tableName).insert([itemForCloud]);
 
-    // Attempt 2: If failed due to missing column (schema mismatch), retry WITHOUT user_id
-    if (error && error.message && (error.message.includes('Could not find') || error.message.includes('column'))) {
-        console.warn(`[Cloud Sync] Schema mismatch for table '${tableName}'. Retrying without user_id...`);
-        const { user_id, ...itemWithoutUser } = itemForCloud;
-        const retry = await supabase.from(tableName).insert([itemWithoutUser]);
-        
-        if (!retry.error) {
-            // Success on retry!
-            // We should notify the user gently that data is public because of this
-            // But don't spam them. Maybe just console log or a subtle toast?
-            // User explicitly complained about "Failed to add", so now it will succeed.
-            // We can show a one-time alert or just let it be.
-            // Let's alert only if it's the first time or critically needed.
-            // For now, let's just make it work.
-            return; 
-        } else {
-            // Retry failed too
-            error = retry.error;
-        }
-    }
-
     if (error) {
         console.error("Error adding item:", error);
-        if (error.message?.includes('Could not find') && error.message?.includes('column')) {
-            alert(`云同步警告：Supabase 数据库表 '${tableName}' 缺少字段 (如 'user_id' 或 'addedAt')。\n\n请在 Supabase 后台添加缺失字段以启用多用户隔离功能。当前操作已失败。`);
+        if (error.message?.includes('Could not find') && (error.message?.includes('user_id') || error.message?.includes('column'))) {
+            alert(`【云同步警告】\n\n数据已保存到本地，但同步到云端失败。\n原因：Supabase 数据库表 '${tableName}' 缺少 'user_id' 字段。\n\n请联系管理员或在 Supabase 后台添加 'user_id' (uuid) 字段以启用多设备同步。`);
         } else {
-            alert("同步到云端失败: " + error.message);
+            // Revert local change if it's a critical error (optional, but keeping it optimistic is usually better unless it's a validation error)
+            // alert("同步到云端失败: " + error.message);
+            console.warn("Sync failed, item is local only for now.");
         }
     }
   };
