@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music, Menu, X } from 'lucide-react';
+import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music, Menu, X, Bot } from 'lucide-react';
 import GlobalMusicPlayer from './GlobalMusicPlayer';
 
 const Layout = () => {
@@ -25,6 +25,7 @@ const Layout = () => {
     { path: '/music', label: '音乐收藏 (Music)', icon: Music, color: 'hover:text-rose-700' },
     { path: '/resources', label: '资源分享 (Resources)', icon: Share2, color: 'hover:text-emerald-700' },
     { path: '/travel', label: '旅游见闻 (Travel)', icon: Map, color: 'hover:text-orange-700' },
+    { path: '/ai', label: 'AI 对话 (Chat)', icon: Bot, color: 'hover:text-violet-700' },
   ];
 
   return (

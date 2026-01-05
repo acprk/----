@@ -60,12 +60,45 @@ const MarkdownEditor = ({ value, onChange, placeholder, minHeight = "min-h-[400p
         e.preventDefault();
         hasImage = true;
         const file = item.getAsFile();
+        
+        // Compress image before inserting to avoid massive base64 strings
         const reader = new FileReader();
         reader.onload = (event) => {
-          const base64 = event.target.result;
-          // Insert image markdown with base64 data
-          const imageMarkdown = `![Pasted Image](${base64})`;
-          insertText(imageMarkdown);
+          const img = new Image();
+          img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              
+              // Max dimensions to keep string size reasonable
+              const MAX_WIDTH = 1200;
+              const MAX_HEIGHT = 1200;
+
+              if (width > height) {
+                  if (width > MAX_WIDTH) {
+                      height *= MAX_WIDTH / width;
+                      width = MAX_WIDTH;
+                  }
+              } else {
+                  if (height > MAX_HEIGHT) {
+                      width *= MAX_HEIGHT / height;
+                      height = MAX_HEIGHT;
+                  }
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Convert to JPEG with 0.7 quality (good balance)
+              const base64 = canvas.toDataURL('image/jpeg', 0.7);
+              
+              // Insert image markdown
+              const imageMarkdown = `\n![Pasted Image](${base64})\n`;
+              insertText(imageMarkdown);
+          };
+          img.src = event.target.result;
         };
         reader.readAsDataURL(file);
       }

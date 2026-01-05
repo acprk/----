@@ -45,6 +45,7 @@ const App = () => {
               <Route path="music" element={<Music />} />
               <Route path="resources" element={<Resources />} />
               <Route path="travel" element={<Travel />} />
+              <Route path="ai" element={<AIChat />} />
             </Route>
           </Routes>
         </BrowserRouter>

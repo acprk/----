@@ -75,15 +75,38 @@ const Music = () => {
       setIsSearching(true);
       try {
           const entity = searchMode === 'album' ? 'album' : 'song';
+          // Use a proxy or different API if available, but for now stick to iTunes with better error handling
           const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=${entity}&limit=20`);
           const data = await response.json();
           setNetworkResults(data.results || []);
       } catch (error) {
           console.error("Search failed:", error);
-          alert("搜索失败，请检查网络连接");
+          alert("搜索连接失败，请检查网络或尝试下方平台的直接搜索功能。");
       } finally {
           setIsSearching(false);
       }
+  };
+
+  const openExternalSearch = (platform, query) => {
+      let url = '';
+      const q = encodeURIComponent(query);
+      switch(platform) {
+          case 'netease':
+              url = `https://music.163.com/#/search/m/?s=${q}`;
+              break;
+          case 'qq':
+              url = `https://y.qq.com/n/ryqq/search?w=${q}`;
+              break;
+          case 'bilibili':
+              url = `https://search.bilibili.com/all?keyword=${q}`;
+              break;
+          case 'youtube':
+              url = `https://www.youtube.com/results?search_query=${q}`;
+              break;
+          default:
+              return;
+      }
+      window.open(url, '_blank');
   };
 
   const handleImportMusic = (result) => {
@@ -339,10 +362,49 @@ const Music = () => {
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50/30">
+                    {/* Domestic Search Options */}
+                    {networkResults.length === 0 && (
+                        <div className="mb-6 p-4 bg-rose-50 rounded-xl border border-rose-100">
+                            <h4 className="text-sm font-bold text-rose-800 mb-3 flex items-center gap-2">
+                                <Globe className="w-4 h-4" /> 
+                                国内平台搜索 (Domestic Search)
+                            </h4>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button 
+                                    onClick={() => openExternalSearch('netease', document.querySelector('input[type="text"]').value || searchQuery)}
+                                    className="flex items-center justify-center gap-2 py-2 bg-white border border-rose-200 rounded-lg text-rose-600 hover:bg-rose-600 hover:text-white transition-all text-xs font-bold"
+                                >
+                                    网易云音乐 (Netease)
+                                </button>
+                                <button 
+                                    onClick={() => openExternalSearch('qq', document.querySelector('input[type="text"]').value || searchQuery)}
+                                    className="flex items-center justify-center gap-2 py-2 bg-white border border-rose-200 rounded-lg text-rose-600 hover:bg-green-600 hover:border-green-600 hover:text-white transition-all text-xs font-bold"
+                                >
+                                    QQ音乐 (QQ Music)
+                                </button>
+                                <button 
+                                    onClick={() => openExternalSearch('bilibili', document.querySelector('input[type="text"]').value || searchQuery)}
+                                    className="flex items-center justify-center gap-2 py-2 bg-white border border-rose-200 rounded-lg text-rose-600 hover:bg-blue-400 hover:border-blue-400 hover:text-white transition-all text-xs font-bold"
+                                >
+                                    Bilibili
+                                </button>
+                                <button 
+                                    onClick={() => openExternalSearch('youtube', document.querySelector('input[type="text"]').value || searchQuery)}
+                                    className="flex items-center justify-center gap-2 py-2 bg-white border border-rose-200 rounded-lg text-rose-600 hover:bg-red-600 hover:border-red-600 hover:text-white transition-all text-xs font-bold"
+                                >
+                                    YouTube
+                                </button>
+                            </div>
+                            <p className="text-[10px] text-rose-900/40 mt-2 text-center">
+                                * iTunes 搜索连接不畅时，请使用上方按钮直接跳转平台搜索
+                            </p>
+                        </div>
+                    )}
+
                     {networkResults.length === 0 && !isSearching && (
-                        <div className="text-center py-12 text-slate-400">
+                        <div className="text-center py-8 text-slate-400">
                             <MusicIcon className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                            <p>输入关键词开始搜索全球音乐库</p>
+                            <p>输入关键词开始搜索</p>
                         </div>
                     )}
                     {networkResults.map((result) => (

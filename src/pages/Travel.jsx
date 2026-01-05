@@ -1,15 +1,39 @@
-import React, { useState } from 'react';
-import { MapPin, Calendar, Camera, Navigation, Map as MapIcon, Plus, X, Trash2, Activity, Timer, Trophy, Edit2, Search, Cloud, CloudOff, Globe } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Calendar, Camera, Navigation, Map as MapIcon, Plus, X, Trash2, Activity, Timer, Trophy, Edit2, Search, Cloud, CloudOff, Globe, Layers } from 'lucide-react';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
-const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-const chinaGeoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/china/china-provinces.json";
+// Fix Leaflet default icon issue
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Map Controller Component to handle view changes
+const MapController = ({ center, zoom }) => {
+    const map = useMap();
+    useEffect(() => {
+        map.flyTo(center, zoom, {
+            duration: 1.5
+        });
+    }, [center, zoom, map]);
+    return null;
+};
 
 const Travel = () => {
   const initialTrips = [
@@ -268,102 +292,73 @@ const Travel = () => {
       </header>
 
       {/* Map Section */}
-      <div className="bg-orange-50/30 rounded-2xl p-6 border border-orange-100 shadow-inner h-[400px] md:h-[500px] overflow-hidden relative flex flex-col">
-          <div className="absolute top-4 left-4 z-10 flex gap-2">
+      <div className="bg-white rounded-2xl p-1 border border-orange-100 shadow-lg h-[450px] md:h-[600px] overflow-hidden relative flex flex-col z-0">
+          <div className="absolute top-4 left-4 z-[400] flex gap-2">
               <button 
                 onClick={() => setActiveMap('world')}
-                className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1 transition-all ${activeMap === 'world' ? 'bg-orange-500 text-white' : 'bg-white/80 text-orange-800 hover:bg-white'}`}
+                className={`px-4 py-2 rounded-full text-xs font-bold shadow-md flex items-center gap-2 transition-all backdrop-blur-md ${activeMap === 'world' ? 'bg-orange-500 text-white' : 'bg-white/90 text-stone-600 hover:bg-white'}`}
               >
                   <Globe className="w-3 h-3" />
-                  世界足迹
+                  世界地图 (World)
               </button>
               <button 
                 onClick={() => setActiveMap('china')}
-                className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1 transition-all ${activeMap === 'china' ? 'bg-red-500 text-white' : 'bg-white/80 text-orange-800 hover:bg-white'}`}
+                className={`px-4 py-2 rounded-full text-xs font-bold shadow-md flex items-center gap-2 transition-all backdrop-blur-md ${activeMap === 'china' ? 'bg-red-500 text-white' : 'bg-white/90 text-stone-600 hover:bg-white'}`}
               >
                   <MapIcon className="w-3 h-3" />
-                  中国足迹
+                  中国地图 (China)
               </button>
           </div>
 
-          <ComposableMap 
-            projection={activeMap === 'china' ? "geoMercator" : "geoEqualEarth"}
-            projectionConfig={
-                activeMap === 'china' 
-                ? { scale: 750, center: [105, 38] } 
-                : { scale: 147 }
-            }
-            className="w-full h-full"
+          <MapContainer 
+            center={activeMap === 'china' ? [35.8617, 104.1954] : [20, 0]} 
+            zoom={activeMap === 'china' ? 4 : 2} 
+            scrollWheelZoom={true}
+            className="w-full h-full rounded-xl z-0"
+            style={{ background: '#f8fafc' }}
           >
-            <Geographies geography={activeMap === 'china' ? chinaGeoUrl : geoUrl}>
-              {({ geographies }) =>
-                geographies.map((geo) => {
-                  // Generate a deterministic color for China provinces based on name length/char code
-                  // to make it look "not just simple vector" (more colorful/varied)
-                  const isChina = activeMap === 'china';
-                  let fillColor = "#fed7aa"; // default orange-200
-                  
-                  if (isChina) {
-                      const nameVal = geo.properties.name ? geo.properties.name.length : 0;
-                      // Subtle variations of orange/red/yellow for China
-                      const colors = ["#fed7aa", "#fdba74", "#fb923c", "#fca5a5", "#fcd34d", "#e2e8f0"];
-                      fillColor = colors[nameVal % colors.length];
-                  }
+             <MapController 
+                center={activeMap === 'china' ? [35.8617, 104.1954] : [20, 0]} 
+                zoom={activeMap === 'china' ? 4 : 2} 
+             />
+             
+             {/* Tile Layer Switching */}
+             {activeMap === 'china' ? (
+                 <TileLayer
+                    attribution='&copy; <a href="https://www.amap.com/">Gaode</a>'
+                    url="https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+                 />
+             ) : (
+                 <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                 />
+             )}
 
-                  return (
-                    <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        fill={fillColor}
-                        stroke="#fff"
-                        strokeWidth={0.5}
-                        style={{
-                        default: { outline: "none" },
-                        hover: { 
-                            fill: isChina ? "#ef4444" : "#fdba74", // Red hover for China, Orange for World
-                            outline: "none",
-                            filter: "drop-shadow(0 0 5px rgba(0,0,0,0.2))",
-                            strokeWidth: 1
-                        }, 
-                        pressed: { fill: "#ea580c", outline: "none" }, 
-                        }}
-                    />
-                  );
-                })
-              }
-            </Geographies>
-            {/* Markers */}
-            {(trips || []).map(({ id, title, location, coordinates }) => (
-              coordinates && coordinates[0] !== 0 && (
-                  <Marker key={id} coordinates={coordinates}>
-                    <g
-                        className="group"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                            // Find the trip and open details
-                            const trip = trips.find(t => t.id === id);
-                            if (trip) setViewingTrip(trip);
-                        }}
-                    >
-                        <circle r={activeMap === 'china' ? 3 : 4} fill={activeMap === 'china' ? "#ef4444" : "#ea580c"} stroke="#fff" strokeWidth={2} className="animate-pulse" />
-                        <text
-                        textAnchor="middle"
-                        y={-10}
-                        style={{ 
-                            fontFamily: "system-ui", 
-                            fill: activeMap === 'china' ? "#b91c1c" : "#9a3412", 
-                            fontSize: activeMap === 'china' ? "8px" : "10px", 
-                            fontWeight: "bold",
-                            textShadow: "0 1px 2px rgba(255,255,255,0.8)"
-                        }}
-                        >
-                        {location.split(',')[0]}
-                        </text>
-                    </g>
-                  </Marker>
-              )
-            ))}
-          </ComposableMap>
+             {/* Markers */}
+             {(trips || []).map((trip) => (
+                 trip.coordinates && trip.coordinates[0] !== 0 && (
+                     <Marker 
+                        key={trip.id} 
+                        position={[trip.coordinates[1], trip.coordinates[0]]} // Leaflet uses [lat, lng]
+                     >
+                        <Popup>
+                            <div className="text-center">
+                                <h3 className="font-bold text-orange-900">{trip.location}</h3>
+                                <p className="text-xs text-stone-500 mb-2">{trip.title}</p>
+                                {trip.imageUrl && <img src={trip.imageUrl} alt={trip.title} className="w-32 h-20 object-cover rounded mb-2 mx-auto" />}
+                                <button 
+                                    onClick={() => setViewingTrip(trip)}
+                                    className="text-xs text-orange-600 font-bold hover:underline"
+                                >
+                                    查看详情
+                                </button>
+                            </div>
+                        </Popup>
+                     </Marker>
+                 )
+             ))}
+          </MapContainer>
       </div>
 
       {/* Masonry Layout for Trips */}

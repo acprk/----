@@ -421,6 +421,96 @@ const Resources = () => {
       </div>
       </DndContext>
 
+      {/* Search & Link Extractor Modal */}
+      {showSearchModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in border border-stone-200">
+                <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+                    <h3 className="font-bold text-stone-800 flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-blue-500" />
+                        全网资源搜索 & 链接提取
+                    </h3>
+                    <button onClick={() => setShowSearchModal(false)} className="text-stone-400 hover:text-stone-600">
+                        <X size={20} />
+                    </button>
+                </div>
+                <div className="p-6 space-y-6">
+                    {/* Search Section */}
+                    <div>
+                        <h4 className="text-xs font-bold text-stone-500 uppercase mb-3">多平台搜索 (Multi-Platform Search)</h4>
+                        <div className="relative mb-3">
+                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                             <input 
+                                type="text" 
+                                placeholder="输入关键词 (e.g., React Hooks, Transformer Paper)..."
+                                className="w-full pl-9 pr-4 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                                id="resource-search-input"
+                                onKeyDown={(e) => {
+                                    if(e.key === 'Enter') openExternalSearch('google', e.target.value);
+                                }}
+                             />
+                        </div>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                             <button onClick={() => openExternalSearch('google', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors">Google</button>
+                             <button onClick={() => openExternalSearch('github', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-stone-800 hover:text-white hover:border-stone-800 transition-colors">GitHub</button>
+                             <button onClick={() => openExternalSearch('stackoverflow', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors">StackOverflow</button>
+                             <button onClick={() => openExternalSearch('arxiv', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors">ArXiv</button>
+                             <button onClick={() => openExternalSearch('juejin', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors">掘金 (Juejin)</button>
+                             <button onClick={() => openExternalSearch('zhihu', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors">知乎 (Zhihu)</button>
+                             <button onClick={() => openExternalSearch('bilibili', document.getElementById('resource-search-input').value)} className="px-3 py-2 bg-stone-50 border border-stone-200 rounded text-xs font-medium hover:bg-pink-50 hover:text-pink-600 hover:border-pink-200 transition-colors">Bilibili</button>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-stone-100 pt-4">
+                        <h4 className="text-xs font-bold text-stone-500 uppercase mb-3 flex items-center gap-2">
+                            <Link2 className="w-4 h-4" />
+                            链接提取工具 (Link Extractor)
+                        </h4>
+                        <textarea 
+                            className="w-full h-24 p-3 text-sm border border-stone-200 rounded-lg focus:outline-none focus:border-emerald-500 resize-none mb-2 font-mono"
+                            placeholder="在此处粘贴包含链接的文本，我们将自动提取其中的 URL..."
+                            value={linkExtractText}
+                            onChange={(e) => setLinkExtractText(e.target.value)}
+                        ></textarea>
+                        <button 
+                            onClick={handleExtractLinks}
+                            className="w-full py-2 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors mb-4"
+                        >
+                            提取链接
+                        </button>
+                        
+                        {extractedLinks.length > 0 && (
+                            <div className="bg-emerald-50 rounded-lg p-3 max-h-32 overflow-y-auto space-y-2 border border-emerald-100">
+                                {extractedLinks.map((link, idx) => (
+                                    <div key={idx} className="flex items-center justify-between gap-2 bg-white p-2 rounded border border-emerald-100">
+                                        <span className="text-xs text-stone-600 truncate flex-1 font-mono">{link}</span>
+                                        <div className="flex gap-1 shrink-0">
+                                            <a href={link} target="_blank" rel="noreferrer" className="p-1 hover:bg-stone-100 rounded text-emerald-600">
+                                                <ExternalLink className="w-3 h-3" />
+                                            </a>
+                                            <button 
+                                                onClick={() => {
+                                                    // Quick add to new resource
+                                                    setNewResource({...newResource, link: link, title: 'New Resource'});
+                                                    setShowSearchModal(false);
+                                                    setShowModal(true);
+                                                }}
+                                                className="p-1 hover:bg-stone-100 rounded text-emerald-600"
+                                                title="Add to Resources"
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Add Resource Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
