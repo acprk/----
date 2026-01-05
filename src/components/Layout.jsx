@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music, Menu, X, Bot } from 'lucide-react';
+import { BookOpen, Code2, Lightbulb, Share2, Map, LogOut, Music, Menu, X, Bot, User as UserIcon } from 'lucide-react';
 import GlobalMusicPlayer from './GlobalMusicPlayer';
 
 const Layout = () => {
@@ -74,10 +74,28 @@ const Layout = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-stone-100">
+        <div className="p-4 border-t border-stone-100 space-y-2">
+          <NavLink 
+              to="/profile"
+              onClick={handleNavClick}
+              className={({ isActive }) => `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all mb-2 border border-transparent ${isActive ? 'bg-stone-50 border-stone-200 shadow-sm' : 'hover:bg-stone-50'}`}
+          >
+              <div className="w-8 h-8 rounded-full bg-stone-200 overflow-hidden shrink-0 border border-stone-100">
+                   <img 
+                      src={user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.user_metadata?.full_name || user?.email || 'U')}&background=random`} 
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                   />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                  <p className="truncate font-bold text-stone-800 text-xs">{user?.user_metadata?.full_name || 'User'}</p>
+                  <p className="truncate text-[10px] text-stone-400">{user?.email}</p>
+              </div>
+          </NavLink>
+
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-stone-400 hover:text-red-600 hover:bg-red-50 w-full rounded-sm transition-colors"
+            className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-stone-400 hover:text-red-600 hover:bg-red-50 w-full rounded-sm transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Logout

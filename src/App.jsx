@@ -47,6 +47,7 @@ const App = () => {
               <Route path="resources" element={<Resources />} />
               <Route path="travel" element={<Travel />} />
               <Route path="ai" element={<AIChat />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
           </Routes>
         </BrowserRouter>
