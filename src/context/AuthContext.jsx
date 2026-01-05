@@ -78,6 +78,12 @@ export const AuthProvider = ({ children }) => {
     
     if (data?.user) {
       setUser(data.user);
+      // Force refresh session to ensure persistence across reloads
+      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+      }
     }
     
     return { data, error };
