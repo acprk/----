@@ -129,28 +129,46 @@ const Profile = () => {
                     </div>
                     
                     <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">头像链接 (Avatar URL)</label>
-                        <div className="relative">
-                            <Camera className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                            <input
-                                type="url"
-                                value={formData.avatarUrl}
-                                onChange={(e) => setFormData({...formData, avatarUrl: e.target.value})}
-                                className="w-full pl-9 pr-4 p-2.5 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-all"
-                                placeholder="https://example.com/avatar.jpg"
-                            />
+                        <label className="block text-sm font-medium text-stone-700 mb-2">头像 (Avatar)</label>
+                        <div className="space-y-3">
+                            {/* Upload Button */}
+                            <div className="flex items-center gap-3">
+                                <label className="flex items-center justify-center gap-2 px-4 py-2 bg-stone-100 text-stone-700 rounded-lg cursor-pointer hover:bg-stone-200 transition-colors text-sm font-medium">
+                                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                    {uploading ? '上传中...' : '上传本地图片'}
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept="image/*"
+                                        onChange={handleAvatarUpload}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                                <span className="text-xs text-stone-400">或</span>
+                            </div>
+
+                            {/* URL Input */}
+                            <div className="relative">
+                                <Camera className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                                <input
+                                    type="url"
+                                    value={formData.avatarUrl}
+                                    onChange={(e) => setFormData({...formData, avatarUrl: e.target.value})}
+                                    className="w-full pl-9 pr-4 p-2.5 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-all text-sm"
+                                    placeholder="https://example.com/avatar.jpg"
+                                />
+                            </div>
+                            <p className="text-xs text-stone-400">支持本地上传或输入图片链接</p>
                         </div>
-                        <p className="text-xs text-stone-400 mt-1">支持任何公开的图片链接</p>
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-stone-700 mb-2">个人网站 (Website)</label>
-                        <input
-                            type="url"
-                            value={formData.website}
-                            onChange={(e) => setFormData({...formData, website: e.target.value})}
-                            className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-all"
-                            placeholder="https://your-website.com"
+                        <label className="block text-sm font-medium text-stone-700 mb-2">个性签名 (Bio)</label>
+                        <textarea
+                            value={formData.bio}
+                            onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                            className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-all min-h-[100px] resize-y"
+                            placeholder="写一句话介绍你自己..."
                         />
                     </div>
                 </div>
