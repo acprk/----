@@ -9,6 +9,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+const chinaGeoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/china/china-provinces.json";
 
 const Travel = () => {
   const initialTrips = [
@@ -266,41 +267,98 @@ const Travel = () => {
       </header>
 
       {/* Map Section */}
-      <div className="bg-orange-50/30 rounded-2xl p-6 border border-orange-100 shadow-inner h-[400px] md:h-[500px] overflow-hidden relative">
-          <div className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-orange-800 shadow-sm">
-              <MapIcon className="w-3 h-3 inline-block mr-1" />
-              世界足迹地图
+      <div className="bg-orange-50/30 rounded-2xl p-6 border border-orange-100 shadow-inner h-[400px] md:h-[500px] overflow-hidden relative flex flex-col">
+          <div className="absolute top-4 left-4 z-10 flex gap-2">
+              <button 
+                onClick={() => setActiveMap('world')}
+                className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1 transition-all ${activeMap === 'world' ? 'bg-orange-500 text-white' : 'bg-white/80 text-orange-800 hover:bg-white'}`}
+              >
+                  <Globe className="w-3 h-3" />
+                  世界足迹
+              </button>
+              <button 
+                onClick={() => setActiveMap('china')}
+                className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1 transition-all ${activeMap === 'china' ? 'bg-red-500 text-white' : 'bg-white/80 text-orange-800 hover:bg-white'}`}
+              >
+                  <MapIcon className="w-3 h-3" />
+                  中国足迹
+              </button>
           </div>
-          <ComposableMap projectionConfig={{ scale: 147 }} className="w-full h-full">
-            <Geographies geography={geoUrl}>
+
+          <ComposableMap 
+            projection={activeMap === 'china' ? "geoMercator" : "geoEqualEarth"}
+            projectionConfig={
+                activeMap === 'china' 
+                ? { scale: 750, center: [105, 38] } 
+                : { scale: 147 }
+            }
+            className="w-full h-full"
+          >
+            <Geographies geography={activeMap === 'china' ? chinaGeoUrl : geoUrl}>
               {({ geographies }) =>
-                geographies.map((geo) => (
-                  <Geography
-                    key={geo.rsmKey}
-                    geography={geo}
-                    fill="#fed7aa" // orange-200
-                    stroke="#fff"
-                    strokeWidth={0.5}
-                    style={{
-                      default: { outline: "none" },
-                      hover: { fill: "#fdba74", outline: "none" }, // orange-300
-                      pressed: { fill: "#fb923c", outline: "none" }, // orange-400
-                    }}
-                  />
-                ))
+                geographies.map((geo) => {
+                  // Generate a deterministic color for China provinces based on name length/char code
+                  // to make it look "not just simple vector" (more colorful/varied)
+                  const isChina = activeMap === 'china';
+                  let fillColor = "#fed7aa"; // default orange-200
+                  
+                  if (isChina) {
+                      const nameVal = geo.properties.name ? geo.properties.name.length : 0;
+                      // Subtle variations of orange/red/yellow for China
+                      const colors = ["#fed7aa", "#fdba74", "#fb923c", "#fca5a5", "#fcd34d", "#e2e8f0"];
+                      fillColor = colors[nameVal % colors.length];
+                  }
+
+                  return (
+                    <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        fill={fillColor}
+                        stroke="#fff"
+                        strokeWidth={0.5}
+                        style={{
+                        default: { outline: "none" },
+                        hover: { 
+                            fill: isChina ? "#ef4444" : "#fdba74", // Red hover for China, Orange for World
+                            outline: "none",
+                            filter: "drop-shadow(0 0 5px rgba(0,0,0,0.2))",
+                            strokeWidth: 1
+                        }, 
+                        pressed: { fill: "#ea580c", outline: "none" }, 
+                        }}
+                    />
+                  );
+                })
               }
             </Geographies>
+            {/* Markers */}
             {(trips || []).map(({ id, title, location, coordinates }) => (
-              coordinates && (
+              coordinates && coordinates[0] !== 0 && (
                   <Marker key={id} coordinates={coordinates}>
-                    <circle r={4} fill="#ea580c" stroke="#fff" strokeWidth={2} />
-                    <text
-                      textAnchor="middle"
-                      y={-10}
-                      style={{ fontFamily: "system-ui", fill: "#9a3412", fontSize: "10px", fontWeight: "bold" }}
+                    <g
+                        className="group"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => {
+                            // Find the trip and open details
+                            const trip = trips.find(t => t.id === id);
+                            if (trip) setViewingTrip(trip);
+                        }}
                     >
-                      {location.split(',')[0]}
-                    </text>
+                        <circle r={activeMap === 'china' ? 3 : 4} fill={activeMap === 'china' ? "#ef4444" : "#ea580c"} stroke="#fff" strokeWidth={2} className="animate-pulse" />
+                        <text
+                        textAnchor="middle"
+                        y={-10}
+                        style={{ 
+                            fontFamily: "system-ui", 
+                            fill: activeMap === 'china' ? "#b91c1c" : "#9a3412", 
+                            fontSize: activeMap === 'china' ? "8px" : "10px", 
+                            fontWeight: "bold",
+                            textShadow: "0 1px 2px rgba(255,255,255,0.8)"
+                        }}
+                        >
+                        {location.split(',')[0]}
+                        </text>
+                    </g>
                   </Marker>
               )
             ))}
