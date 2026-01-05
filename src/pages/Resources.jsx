@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3, Cloud, CloudOff, Globe, Search, Link2 } from 'lucide-react';
+import { Download, ExternalLink, File, FileCode, Database, Archive, HardDrive, Plus, X, Youtube, Link as LinkIcon, Trash2, Music, Film, Wrench, FileText, Edit3, Cloud, CloudOff, Globe, Search, Link2, BookOpen, Library } from 'lucide-react';
 import { Rnd } from 'react-rnd';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import MarkdownEditor from '../components/MarkdownEditor';
@@ -258,6 +258,28 @@ const Resources = () => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const matches = linkExtractText.match(urlRegex);
     setExtractedLinks(matches || []);
+  };
+
+  const importSearchResult = (item) => {
+    let category = 'Tools';
+    if (item.source === 'ArXiv') category = 'Papers';
+    if (item.source === 'GitHub') category = 'Tools';
+    if (item.source === 'Wikipedia') category = 'Tools';
+    if (item.source === 'Google Books') category = 'Papers';
+    
+    const resourceToAdd = {
+      id: Date.now(),
+      title: item.title,
+      link: item.link,
+      description: item.description || item.title,
+      category: category,
+      type: 'Link',
+      content: `Imported from ${item.source}\n\n${item.meta}\n\n${item.link}`
+    };
+    
+    addItem(resourceToAdd);
+    // Optional: Show a toast or feedback
+    alert(`Added "${item.title}" to Resources!`);
   };
 
   // Form State
