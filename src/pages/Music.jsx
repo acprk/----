@@ -68,13 +68,14 @@ const Music = () => {
       }
   };
 
+  const [searchMode, setSearchMode] = useState('song'); // 'song' | 'album'
+
   const handleNetworkSearch = async (query) => {
       if (!query.trim()) return;
       setIsSearching(true);
       try {
-          // Use iTunes Search API as a public, CORS-friendly source for music metadata
-          // Search for music, limit to 20 results
-          const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`);
+          const entity = searchMode === 'album' ? 'album' : 'song';
+          const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=${entity}&limit=20`);
           const data = await response.json();
           setNetworkResults(data.results || []);
       } catch (error) {
@@ -86,23 +87,21 @@ const Music = () => {
   };
 
   const handleImportMusic = (result) => {
-      // Map iTunes result to our data structure
-      // trackName -> title
-      // artistName -> artist (append to title)
-      // previewUrl -> link (audio preview)
-      // artworkUrl100 -> cover (use high res if possible)
+      // If it's an album, we might want to fetch tracks, but for now let's just import the album representative or the song.
+      // Actually, if searchMode is 'album', result is a collection. 
+      // User probably wants to add the whole album? Or just see it?
+      // For simplicity in this version, we treat everything as a "Music Item".
+      // But let's handle the "addedAt" error first by removing it.
       
-      const title = `${result.trackName} - ${result.artistName}`;
-      // iTunes preview is m4a/mp3 usually.
-      // Use artworkUrl100 but try to get 600x600 by string replacement
-      const cover = result.artworkUrl100.replace('100x100bb', '600x600bb');
+      const title = result.collectionName || `${result.trackName} - ${result.artistName}`;
+      const cover = result.artworkUrl100?.replace('100x100bb', '600x600bb');
       
       const newItem = {
           id: Date.now(),
           title: title,
-          link: result.previewUrl, // Note: This is a 30s preview. For full songs, user usually needs their own link. But this meets "import" req.
+          link: result.previewUrl || '', // It might be empty for albums
           cover: cover,
-          addedAt: new Date().toISOString()
+          // REMOVED addedAt to fix schema mismatch error
       };
       
       addItem(newItem);
@@ -216,9 +215,34 @@ const Music = () => {
                   <div className="flex items-center justify-between mt-auto">
                        <span className="text-xs text-stone-400 font-mono">{new Date(item.addedAt || item.created_at).toLocaleDateString()}</span>
                        {item.link && (
-                           <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-600" onClick={(e) => e.stopPropagation()}>
-                               <ExternalLink size={14} />
-                           </a>
+                           <div className="flex items-center gap-2">
+                               <a href={item.link} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-600" onClick={(e) => e.stopPropagation()} title="Open Link">
+                                   <ExternalLink size={14} />
+                               </a>
+                               {/* Quick helper to search full version if link is empty or looks like a preview */}
+                               {(!item.link || item.link.includes('apple.com')) && (
+                                   <a 
+                                     href={`https://www.youtube.com/results?search_query=${encodeURIComponent(item.title)}`} 
+                                     target="_blank" 
+                                     rel="noopener noreferrer" 
+                                     className="text-red-500 hover:text-red-700 text-[10px] font-bold border border-red-100 bg-red-50 px-2 py-0.5 rounded-full flex items-center gap-1"
+                                     onClick={(e) => e.stopPropagation()}
+                                   >
+                                     <Play size={8} /> Find Full
+                                   </a>
+                               )}
+                           </div>
+                       )}
+                       {!item.link && (
+                            <a 
+                                href={`https://www.youtube.com/results?search_query=${encodeURIComponent(item.title)}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-red-500 hover:text-red-700 text-[10px] font-bold border border-red-100 bg-red-50 px-2 py-0.5 rounded-full flex items-center gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <Play size={8} /> Find Full
+                            </a>
                        )}
                   </div>
               </div>
@@ -329,10 +353,15 @@ const Music = () => {
                                 className="w-16 h-16 rounded-lg object-cover shadow-sm"
                             />
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-slate-800 truncate">{result.trackName}</h4>
+                                <h4 className="font-bold text-slate-800 truncate">{result.trackName || result.collectionName}</h4>
                                 <p className="text-xs text-slate-500 truncate">{result.artistName} • {result.collectionName}</p>
                                 {result.previewUrl && (
                                     <audio controls src={result.previewUrl} className="mt-2 h-6 w-full max-w-[200px] opacity-60 hover:opacity-100 transition-opacity" />
+                                )}
+                                {!result.previewUrl && (
+                                    <p className="text-[10px] text-orange-500 mt-2 flex items-center gap-1">
+                                        <ExternalLink size={10} /> 无预览 (Metadata Only)
+                                    </p>
                                 )}
                             </div>
                             <button 
