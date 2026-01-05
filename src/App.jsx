@@ -10,6 +10,7 @@ import Ideas from './pages/Ideas';
 import Resources from './pages/Resources';
 import Travel from './pages/Travel';
 import Music from './pages/Music';
+import AIChat from './pages/AIChat';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
