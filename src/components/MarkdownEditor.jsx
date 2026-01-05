@@ -416,7 +416,8 @@ const MarkdownEditor = ({ value, onChange, placeholder, minHeight = "min-h-[400p
       {/* Footer Info */}
       <div className="px-4 py-2 bg-white border-t border-stone-100 text-[10px] text-stone-400 font-mono flex justify-between items-center">
         <div className="flex gap-4">
-           <span>{value ? value.length : 0} characters</span>
+           {/* Simple word count that ignores massive base64 strings to avoid lag/confusion */}
+           <span>{value ? value.replace(/!\[.*?\]\(data:image.*?\)/g, '[Image]').length : 0} characters</span>
            <span>{value ? value.split(/\s+/).filter(Boolean).length : 0} words</span>
         </div>
         <div className="flex gap-2">

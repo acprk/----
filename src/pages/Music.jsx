@@ -65,6 +65,48 @@ const Music = () => {
       }
   };
 
+  const handleNetworkSearch = async (query) => {
+      if (!query.trim()) return;
+      setIsSearching(true);
+      try {
+          // Use iTunes Search API as a public, CORS-friendly source for music metadata
+          // Search for music, limit to 20 results
+          const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`);
+          const data = await response.json();
+          setNetworkResults(data.results || []);
+      } catch (error) {
+          console.error("Search failed:", error);
+          alert("搜索失败，请检查网络连接");
+      } finally {
+          setIsSearching(false);
+      }
+  };
+
+  const handleImportMusic = (result) => {
+      // Map iTunes result to our data structure
+      // trackName -> title
+      // artistName -> artist (append to title)
+      // previewUrl -> link (audio preview)
+      // artworkUrl100 -> cover (use high res if possible)
+      
+      const title = `${result.trackName} - ${result.artistName}`;
+      // iTunes preview is m4a/mp3 usually.
+      // Use artworkUrl100 but try to get 600x600 by string replacement
+      const cover = result.artworkUrl100.replace('100x100bb', '600x600bb');
+      
+      const newItem = {
+          id: Date.now(),
+          title: title,
+          link: result.previewUrl, // Note: This is a 30s preview. For full songs, user usually needs their own link. But this meets "import" req.
+          cover: cover,
+          addedAt: new Date().toISOString()
+      };
+      
+      addItem(newItem);
+      setShowSearchModal(false);
+      setNetworkResults([]);
+  };
+
   return (
     <div className="space-y-8 animate-fade-in bg-slate-50/50 min-h-screen">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-rose-100">
